@@ -1,14 +1,16 @@
 import { IsEmail } from "class-validator";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { Role } from "./role.enum";
+import { Role } from "../interfaces/role.enum";
+
+@Entity('users')
 export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ length: 50 })
+    @Column({ length: 50, nullable: false })
     username: string;
 
-    @Column({ length: 100 })
+    @Column({ length: 100, unique: true, nullable: false })
     @IsEmail()
     email: string;
 
