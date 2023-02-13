@@ -1,34 +1,52 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe, UsePipes, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { UserLoginDto } from './dto/user-login.dto';
+import { RealIp } from 'nestjs-real-ip';
+import { UserRegisterDto } from './dto/user-register.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from './get-user.decorator';
+import { User } from 'src/user/entities/user.entity';
+import { RequestResetDto } from './dto/req-reset.dto';
+import { SetNewPasswordDto } from './dto/new-password.dto';
+
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  @Post('login')
+  @UsePipes(new ValidationPipe())
+  userLogin(@Body() loginDto: UserLoginDto, @RealIp() ip: string) {
+    return this.authService.signIn(loginDto, ip)
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  @Post('register')
+  @UsePipes(new ValidationPipe())
+  userRegister(@Body() regisDto: UserRegisterDto, @RealIp() ip: string) {
+    return this.authService.signUp(regisDto, ip, false)
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
+  @Post('admin/register')
+  @UsePipes(new ValidationPipe())
+  adminRegister(@Body() regisDto: UserRegisterDto, @RealIp() ip: string) {
+    return this.authService.signUp(regisDto, ip, true)
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
+  @UseGuards(AuthGuard('jwt-refreshtoken'))
+  @Post('refreshtoken')
+  refreshToken(@GetUser() user: User) {
+    return this.authService.refreshToken(user)
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+  @Post('forgot-password')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  forgotPassword(@Body() requestResDto: RequestResetDto, @RealIp() ip: string) {
+    return this.authService.requestResetPassword(requestResDto, ip)
+  }
+
+  @Patch('setup-password/:reset_token')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  setupNewPassword(@Body() changeDto: SetNewPasswordDto, @RealIp() ip: string, @Param('reset_token') resetToken: string) {
+    return this.authService.setupNewPasswordMail(changeDto, resetToken, ip)
   }
 }
