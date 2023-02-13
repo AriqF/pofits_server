@@ -13,7 +13,7 @@ export class JWTRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresht
         private readonly userService: UserService,
     ) {
         super({
-            secretOrKey: "my-secret",
+            secretOrKey: "pofits-secret",
             ignoreExpiration: false,
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
         })
