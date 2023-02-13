@@ -4,21 +4,25 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config/dist';
+import { WeblogModule } from './weblog/weblog.module';
+import { EmailModule } from './email/email.module';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [ConfigModule.forRoot()],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         type: 'mysql',
         host: configService.get('DB_HOST', 'localhost'),
         port: 3306,
-        username: configService.get('DB_USERNAME', 'root'),
-        password: configService.get('DB_PASSWORD', 'root'),
-        database: configService.get('DB_NAME', 'pofits'),
+        username: configService.get('DB_USERNAME'),
+        password: configService.get('DB_PASSWORD'),
+        database: configService.get('DB_NAME'),
         entities: [
-          __dirname + '/entities/*.entity{.ts,.js}',
+          __dirname + '/../**/entities/*.entity.{js,ts}'
         ],
         migrations: [
           __dirname + '/migrations/*{.ts,.js}'
@@ -35,6 +39,10 @@ import { ConfigService } from '@nestjs/config/dist';
         timezone: 'Z',
       }),
     }),
+    AuthModule,
+    UserModule,
+    WeblogModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
