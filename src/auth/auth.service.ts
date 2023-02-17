@@ -13,6 +13,7 @@ import { EmailDto } from 'src/email/dto/email.dto';
 import { EmailService } from 'src/email/email.service';
 import { SetNewPasswordDto } from './dto/new-password.dto';
 import { Role } from 'src/user/interfaces/role.enum';
+import { DataErrorID, UserErrorID } from 'src/utils/global/enum/error-message.enum';
 
 const thisModule = "Auth";
 @Injectable()
@@ -36,7 +37,7 @@ export class AuthService {
         const log = "Logged in";
         await this.logService.addLog(log, thisModule, LogType.Info, ip, user.id);
         return {
-            accessToken, refreshToken, role: user.role, message: "Login successful!"
+            accessToken, refreshToken, role: user.role, message: "Berhasil masuk"
         }
     }
 
@@ -50,37 +51,37 @@ export class AuthService {
         }
         await this.logService.addLog(log, thisModule, LogType.Info, ip, user.id);
         return {
-            message: "Register successfully!"
+            message: "Berhasil daftar!"
         }
     }
 
     async requestResetPassword(requestDto: RequestResetDto, ip: string): Promise<Object> {
         const user: User = await this.userService.getOneByEmail(requestDto.email);
-        if (!user) throw new NotFoundException("Cannot find user with this email")
+        if (!user) throw new NotFoundException(UserErrorID.AccountNotExist)
 
         const resetToken: string = this.generateResetToken(user.id, user.email);
         const updateRes: UpdateResult = await this.userService.updateResetToken(user.id, resetToken);
         if (updateRes.affected != 1) {
             const log = "Failed to update reset token user: " + user.email;
             await this.logService.addLog(log, thisModule, LogType.Failure, ip, user.id)
-            throw new InternalServerErrorException("Failed to update reset token")
+            throw new InternalServerErrorException(DataErrorID.UpdateFailed)
         }
 
-        let resetUrl: string = "http://pofitsapp.sample.vercel.app/resetPassword/";
+        let resetUrl: string = "http://localhost:2095/auth/reset-password?token=";
         try {
             let emailDto: EmailDto = new EmailDto();
             emailDto.to = [user.email];
-            emailDto.subject = "Request To Reset Your Password";
+            emailDto.subject = "Permintaan pengaturan ulang kata sandi";
             emailDto.body = {};
-            emailDto.html = `<h2>Hi!</h2>
-                <p>This password reset link will expire in 20 minutes</p>
-                <p>Link to reset your password: ${resetUrl}${resetToken} </p>`;
+            emailDto.html = `<h2>Hai!</h2>
+                <p>Klik tautan berikut untuk mengatur ulang kata sandimu. Tautan hanya akan valid selama 20 menit kedepan <br /></p>
+                <p>${resetUrl}${resetToken}</p>`;
             await this.emailService.send(emailDto);
 
             const log = "Requested a reset password url";
             await this.logService.addLog(log, thisModule, LogType.Info, ip, user.id)
             return {
-                message: "Email has been sent"
+                message: "Email berhasil dikirim"
             }
         } catch (error) {
             const log = "Failed to request a reset password url";
@@ -91,7 +92,7 @@ export class AuthService {
     async setupNewPasswordMail(passwordDto: SetNewPasswordDto, resetToken: string, ip: string): Promise<Object> {
         const user: User = await this.userService.getOneByResetToken(resetToken);
         const decoded: any = this.jwtService.decode(resetToken);
-        if (Date.now() >= decoded.exp * 1000) throw new UnauthorizedException("Token is no longer valid");
+        if (Date.now() >= decoded.exp * 1000) throw new UnauthorizedException("Token sudah tidak valid");
 
         try {
             await this.userService.updatePassword(user.id, passwordDto.password);
@@ -99,10 +100,10 @@ export class AuthService {
             await this.logService.addLog("Setup a new password", thisModule, LogType.Info, ip, user.id)
         } catch (error) {
             await this.logService.addLog(`Failed to change password: ${String(error)}`, thisModule, LogType.Failure, ip, user.id)
-            throw new InternalServerErrorException("Password change failed.")
+            throw new InternalServerErrorException(UserErrorID.PasswordChangeFailed)
         }
 
-        return { message: "Password change successfully" }
+        return { message: "Kata sandi berhasil diubah" }
     }
 
     generateResetToken(userId: number, email: string): string {

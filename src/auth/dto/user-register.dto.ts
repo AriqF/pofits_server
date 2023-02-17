@@ -1,7 +1,8 @@
 
 
 import { IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from "class-validator";
-import { Match } from "src/decorator/match.decorator";
+import { Match } from "src/utils/decorator/match.decorator";
+import { UserErrorID } from "src/utils/global/enum/error-message.enum";
 
 export class UserRegisterDto {
     @IsNotEmpty()
@@ -19,7 +20,7 @@ export class UserRegisterDto {
     @MinLength(5)
     @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[a-z]).*$/, {
         each: true,
-        message: "Password has to contain number or special character"
+        message: UserErrorID.PasswordRequirement
     })
     password: string;
 
