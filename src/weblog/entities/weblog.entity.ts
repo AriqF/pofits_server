@@ -19,7 +19,7 @@ export class Weblog {
     @Column({ length: 255 })
     ip_address: string;
 
-    @ManyToOne(() => User, user => user.id)
+    @ManyToOne(() => User, user => user.id, { onDelete: "CASCADE" })
     @JoinColumn({ name: "created_by" })
     created_by: User;
 
