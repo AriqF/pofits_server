@@ -14,6 +14,7 @@ import { LogType } from 'src/weblog/interfaces/log-type.enum';
 import { UserFilterDto } from './dto/search-user.dto';
 import { SetNewPasswordDto } from 'src/auth/dto/new-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { DataErrorID, UserErrorID } from 'src/utils/global/enum/error-message.enum';
 
 const thisModule = "User"
 
@@ -43,7 +44,7 @@ export class UserService {
       return user
     } catch (error) {
       if (error.code === "ER_DUP_ENTRY") {
-        throw new ConflictException("Account already exists")
+        throw new ConflictException(UserErrorID.AccountAlreadyExist)
       } else if (error.code === "ER_NO_DEFAULT_FOR_FIELD") {
         throw new BadRequestException()
       } else {
@@ -61,14 +62,14 @@ export class UserService {
 
     if (user && (await bc.compare(loginDto.password, user.password))) {
       if (user.status != 1) {
-        throw new UnauthorizedException("User is inactive or is a deleted account")
+        throw new UnauthorizedException(UserErrorID.InactiveUser)
       }
       delete user.password
       return user;
     } else if (user) {
-      throw new UnauthorizedException("Email or password is incorrect");
+      throw new UnauthorizedException(UserErrorID.IncorrectAuth);
     } else {
-      throw new UnauthorizedException("Account does not exist")
+      throw new UnauthorizedException(UserErrorID.AccountNotExist)
     }
   }
 
@@ -94,7 +95,7 @@ export class UserService {
       .withDeleted()
       .orderBy('user.status', 'DESC')
       .getMany();
-    if (users.length == 0) throw new NotFoundException("No user found");
+    if (users.length == 0) throw new NotFoundException(UserErrorID.NotFound);
     return users
   }
 
@@ -116,7 +117,7 @@ export class UserService {
       .orderBy('user.status', 'DESC')
       .getMany();
 
-    if (filteredUsers.length == 0) throw new NotFoundException("No user match found")
+    if (filteredUsers.length == 0) throw new NotFoundException(DataErrorID.NotFound)
     return filteredUsers
   }
 
@@ -125,7 +126,7 @@ export class UserService {
       .where('user.id = :uid', { uid: id })
       .withDeleted()
       .getOne();
-    if (!user) throw new NotFoundException("No user found")
+    if (!user) throw new NotFoundException(UserErrorID.NotFound)
     return user
   }
 
@@ -137,13 +138,13 @@ export class UserService {
 
   async getOneByID(id: number): Promise<User> {
     const user = await this.userRepo.findOne({ where: { id: id } });
-    if (!user) throw new NotFoundException("No user found by this ID");
+    if (!user) throw new NotFoundException(UserErrorID.NotFound);
     return user;
   }
 
   async getOneByResetToken(token: string): Promise<User> {
     const user = await this.userRepo.findOne({ where: { reset_token: token } })
-    if (!user) throw new NotFoundException("No reset token was found")
+    if (!user) throw new NotFoundException(UserErrorID.NotFound)
     delete user.password
     return user
   }
@@ -158,7 +159,7 @@ export class UserService {
       await this.logService.addLog(`Failed to update user profile: ${String(error)}`, thisModule, LogType.Info, ip, id)
       throw new InternalServerErrorException(String(error))
     }
-    return { message: "Profile has been saved" }
+    return { message: "Profil berhasil disimpan" }
   }
 
   async changeNewPassword(id: number, passwordDto: ChangePasswordDto, ip: string): Promise<Object> {
@@ -168,7 +169,7 @@ export class UserService {
     if (await bc.compare(old_password, user.password)) {
       //confirm if last password used is same as the new one
       if (await bc.compare(password, user.password)) {
-        throw new BadRequestException("New password cannot be the same as the old password")
+        throw new BadRequestException(UserErrorID.OldPasswordSame)
       }
       try {
         await this.updatePassword(id, password);
@@ -177,7 +178,7 @@ export class UserService {
         await this.logService.addLog(`Failed to update password in profile setting: ${String(error)}`, thisModule, LogType.Info, ip, id)
         throw new InternalServerErrorException("Failed to update password")
       }
-      return { message: "Password change successfully" }
+      return { message: "Kata sandi berhasil diubah" }
     }
   }
 
@@ -185,7 +186,7 @@ export class UserService {
     const salt = await bc.genSalt()
     const hashedPassword = await bc.hash(password, salt);
     const user: User = await this.userRepo.findOne({ where: { id: id } });
-    if (!user) throw new NotFoundException("No user found")
+    if (!user) throw new NotFoundException(UserErrorID.NotFound)
     try {
       const updated = await this.userRepo.update(id, {
         password: hashedPassword,
@@ -198,7 +199,7 @@ export class UserService {
 
   async updateResetToken(id: number, resetToken: string): Promise<UpdateResult> {
     const user: User = await this.userRepo.findOne({ where: { id: id } })
-    if (!user) throw new NotFoundException("User not found")
+    if (!user) throw new NotFoundException(UserErrorID.NotFound)
     try {
       return await this.userRepo.update(id, { reset_token: resetToken })
     } catch (error) {
@@ -208,22 +209,57 @@ export class UserService {
 
   async deleteResetToken(id: number): Promise<UpdateResult> {
     const user: User = await this.userRepo.findOne({ where: { id: id } })
-    if (!user) throw new NotFoundException("User not found")
+    if (!user) throw new NotFoundException(UserErrorID.NotFound)
     const update = await this.userRepo.update(id, {
       reset_token: ""
     });
     return update;
   }
 
-  softDeleteById(id: number) {
+  async softDeleteById(id: number, executant: User, ip: string): Promise<Object> {
+    const user: User = await this.userRepo.findOne({ where: { id: id } })
+    if (!user) throw new NotFoundException(UserErrorID.NotFound)
 
+    try {
+      await this.userRepo.update(id, {
+        status: 0,
+      })
+      await this.userRepo.softDelete(id)
+      await this.logService.addLog(`Soft deleted account ${user.email}`, thisModule, LogType.Info, ip, executant.id)
+      return { message: "Pengguna berhasil dinonaktifkan" }
+    } catch (error) {
+      await this.logService.addLog(`Failed soft deleted account ${user.email}`, thisModule, LogType.Failure, ip, executant.id)
+      throw new InternalServerErrorException(UserErrorID.DeactiveFailed)
+    }
   }
 
-  restoreSoftDeleteById(id: number) {
+  async restoreSoftDeleteById(id: number, executant: User, ip: string): Promise<Object> {
+    const user: User = await this.userRepo.findOne({ where: { id: id } })
+    if (!user) throw new NotFoundException(UserErrorID.NotFound)
+    if (user.status == 1) throw new BadRequestException(UserErrorID.UserAlreadyActivated);
 
+    try {
+      await this.userRepo.restore(id);
+      await this.userRepo.update(id, { status: 1 })
+      await this.logService.addLog(`Restored account ${user.email}`, thisModule, LogType.Info, ip, executant.id)
+      return { message: "Pengguna berhasil diaktifkan kembali" }
+    } catch (error) {
+      await this.logService.addLog(`Failed to restore account ${user.email}`, thisModule, LogType.Failure, ip, executant.id)
+      throw new InternalServerErrorException(UserErrorID.RestoreFailed);
+    }
   }
 
-  hardDeleteById(id: number) {
+  async hardDeleteById(id: number, executant: User, ip: string): Promise<Object> {
+    const user: User = await this.userRepo.findOne({ where: { id: id }, withDeleted: true })
+    if (!user) throw new NotFoundException(UserErrorID.NotFound)
 
+    try {
+      await this.userRepo.delete(id);
+      await this.logService.addLog("Permanently deleted account" + user.email, thisModule, LogType.Info, ip, executant.id)
+      return { message: "Pengguna berhasil dihapus secara permanen" }
+    } catch (error) {
+      await this.logService.addLog("Permanently deleted account" + user.email, thisModule, LogType.Info, ip, executant.id)
+      throw new InternalServerErrorException(UserErrorID.DeleteFailed)
+    }
   }
 }
