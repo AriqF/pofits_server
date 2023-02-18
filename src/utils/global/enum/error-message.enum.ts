@@ -17,6 +17,8 @@ export enum UserErrorID {
 }
 
 export enum DataErrorID {
+    AddFailed = "Data gagal ditambahkan. ",
     NotFound = "Data tidak ditemukan",
-    UpdateFailed = "Gagal dalam memperbarui data"
+    UpdateFailed = "Gagal dalam memperbarui data. ",
+    DeleteFailed = "Data gagal dihapus. ",
 }
