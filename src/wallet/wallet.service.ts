@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
@@ -63,9 +63,9 @@ export class WalletService {
     }
 
     async updateWallet(walletId: number, updDto: UpdateWalletDto, user: User, ip: string): Promise<Object> {
-        const wallet = await this.walletRepo.findOne({ where: { id: walletId } })
+        const wallet = await this.walletRepo.findOne({ where: { id: walletId }, loadRelationIds: true, loadEagerRelations: true })
         if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
-
+        console.log(wallet)
         try {
             await this.walletRepo.update(walletId, { ...updDto })
             await this.logService.addLog("Updated a wallet", thisModule, LogType.Info, ip, user.id);
@@ -82,24 +82,24 @@ export class WalletService {
 
         try {
             await this.walletRepo.softDelete(walletId)
-            await this.logService.addLog("Soft deleted a wallet", thisModule, LogType.Info, ip);
+            await this.logService.addLog("Soft deleted a wallet", thisModule, LogType.Info, ip, user.id);
             return { message: DataSuccessID.DataDeleted }
         } catch (error) {
-            await this.logService.addLog("Soft deleted a wallet: " + String(error), thisModule, LogType.Info, ip);
+            await this.logService.addLog("Soft deleted a wallet: " + String(error), thisModule, LogType.Info, ip, user.id);
             throw new InternalServerErrorException(DataErrorID.DeleteFailed + error)
         }
     }
 
     async hardDeleteById(walletId: number, user: User, ip: string): Promise<Object> {
-        const wallet = await this.walletRepo.findOne({ where: { id: walletId } })
+        const wallet = await this.walletRepo.findOne({ where: { id: walletId }, withDeleted: true })
         if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
 
         try {
             await this.walletRepo.delete(walletId);
-            await this.logService.addLog("Permanently deleted a wallet", thisModule, LogType.Info, ip);
+            await this.logService.addLog("Permanently deleted a wallet", thisModule, LogType.Info, ip, user.id);
             return { message: DataSuccessID.DataHardDeleted }
         } catch (error) {
-            await this.logService.addLog("Failed to permanently delete a wallet: " + String(error), thisModule, LogType.Failure, ip);
+            await this.logService.addLog("Failed to permanently delete a wallet: " + String(error), thisModule, LogType.Failure, ip, user.id);
             throw new InternalServerErrorException(DataErrorID.DeleteFailed + error)
         }
     }

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { RealIP } from 'nestjs-real-ip';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -47,5 +47,19 @@ export class WalletController {
     @UsePipes(new ValidationPipe({ transform: true }))
     updateWallet(@Param("id") walletId: number, @GetUser() user: User, @Body() updDto: UpdateWalletDto, @RealIP() ip: string) {
         return this.walletService.updateWallet(walletId, updDto, user, ip)
+    }
+
+    @Delete("soft-delete/:id")
+    @UseGuards(JwtAuthGuard)
+    @UsePipes(new ValidationPipe({ transform: true }))
+    softDeleteWallet(@Param("id") walletId: number, @GetUser() user: User, @RealIP() ip: string) {
+        return this.walletService.softDeleteById(walletId, user, ip)
+    }
+
+    @Delete("hard-delete/:id")
+    @UseGuards(JwtAuthGuard)
+    @UsePipes(new ValidationPipe({ transform: true }))
+    hardDeleteWallet(@Param("id") walletId: number, @GetUser() user: User, @RealIP() ip: string) {
+        return this.walletService.hardDeleteById(walletId, user, ip)
     }
 }
