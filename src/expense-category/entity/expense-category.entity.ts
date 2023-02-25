@@ -2,19 +2,25 @@ import { User } from "src/user/entities/user.entity";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 
-@Entity('wallets')
-export class Wallet {
+
+@Entity('expense_categories')
+export class ExpenseCategory {
+
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ nullable: false, length: 20 })
-    name: string;
+    @Column({ length: 75 })
+    title: string;
 
-    @Column({ length: 255, nullable: true })
+    @Column({ nullable: true })
     description: string;
 
-    @Column({ type: "bigint" })
-    amount: number;
+    @Column({ type: "boolean" })
+    isGlobal: boolean;
+
+    @ManyToOne(() => User, user => user.id, { onDelete: "CASCADE" })
+    @JoinColumn({ name: "created_by" })
+    created_by: User;
 
     @CreateDateColumn()
     created_at: Date;
@@ -24,8 +30,4 @@ export class Wallet {
 
     @DeleteDateColumn()
     deleted_at: Date;
-
-    @ManyToOne(() => User, user => user.id, { onDelete: "CASCADE" })
-    @JoinColumn({ name: "created_by" })
-    created_by: User
 }
