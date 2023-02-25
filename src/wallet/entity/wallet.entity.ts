@@ -7,7 +7,7 @@ export class Wallet {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ nullable: false, length: 50 })
+    @Column({ nullable: false, length: 20 })
     name: string;
 
     @Column({ length: 255, nullable: true })
