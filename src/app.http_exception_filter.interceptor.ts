@@ -1,6 +1,7 @@
 import { ArgumentsHost, BadRequestException, Catch, ExceptionFilter, HttpException, HttpStatus } from "@nestjs/common";
 import { Response } from "express";
 import * as moment from 'moment-timezone';
+import { RealIP } from "nestjs-real-ip";
 import { EntityNotFoundError, TypeORMError } from "typeorm";
 
 @Catch(Error)
@@ -16,6 +17,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
             code: status,
             message: "Internal server error"
         };
+        console.log({
+            timestamp: moment.tz("Asia/Jakarta").format(),
+            ...resErr,
+            // headers: request.headers
+        })
         if (resErr.statusCode) {
             resErr.code = resErr.statusCode;
             delete resErr.statusCode;
