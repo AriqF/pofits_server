@@ -9,6 +9,8 @@ import { EmailModule } from './email/email.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { WalletModule } from './wallet/wallet.module';
+import { IncomeCategoryModule } from './income-category/income-category.module';
+import { ExpenseCategoryModule } from './expense-category/expense-category.module';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { WalletModule } from './wallet/wallet.module';
     WeblogModule,
     EmailModule,
     WalletModule,
+    IncomeCategoryModule,
+    ExpenseCategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
