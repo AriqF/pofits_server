@@ -20,6 +20,9 @@ export class User {
     @Column({ type: "tinyint", default: 1 })
     status: number;
 
+    @Column({ type: "boolean", default: false })
+    isKeepSignedIn: boolean
+
     @Column({ type: "enum", default: Role.User, enum: Role })
     role: Role;
 

@@ -64,12 +64,23 @@ export class UserService {
       if (user.status != 1) {
         throw new UnauthorizedException(UserErrorID.InactiveUser)
       }
+
       delete user.password
       return user;
     } else if (user) {
       throw new UnauthorizedException(UserErrorID.IncorrectAuth);
     } else {
       throw new UnauthorizedException(UserErrorID.AccountNotExist)
+    }
+  }
+
+  async updateLoginInfo(userId: number, isKeepSignedIn: boolean) {
+    try {
+      await this.userRepo.update(userId, {
+        isKeepSignedIn
+      })
+    } catch (error) {
+
     }
   }
 

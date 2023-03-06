@@ -3,6 +3,8 @@ import { Response } from "express";
 import * as moment from 'moment-timezone';
 import { RealIP } from "nestjs-real-ip";
 import { EntityNotFoundError, TypeORMError } from "typeorm";
+import jwt_decode from "jwt-decode";
+import { IJWTPayload } from "./auth/jwt-payload.interface";
 
 @Catch(Error)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -10,6 +12,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const context = host.switchToHttp();
         const response = context.getResponse<Response>();
         const request = context.getRequest<Request>();
+        let decoded: IJWTPayload;
+        // if (token) {
+        //     decoded = jwt_decode(token);
+        // }
+
         let status = exception instanceof HttpException
             ? exception.getStatus()
             : HttpStatus.INTERNAL_SERVER_ERROR;
@@ -17,10 +24,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
             code: status,
             message: "Internal server error"
         };
+
+        if (request.headers["authorization"]) {
+            const token = request.headers["authorization"] as string;
+            decoded = jwt_decode(token);
+        }
+
         console.log({
             timestamp: moment.tz("Asia/Jakarta").format(),
             ...resErr,
-            // headers: request.headers
+            ...decoded,
+
         })
         if (resErr.statusCode) {
             resErr.code = resErr.statusCode;

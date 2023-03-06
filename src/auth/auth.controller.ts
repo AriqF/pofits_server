@@ -32,12 +32,6 @@ export class AuthController {
     return this.authService.signUp(regisDto, ip, true)
   }
 
-  @UseGuards(AuthGuard('jwt-refreshtoken'))
-  @Post('refreshtoken')
-  refreshToken(@GetUser() user: User) {
-    return this.authService.refreshToken(user)
-  }
-
   @Post('forgot-password')
   @UsePipes(new ValidationPipe({ transform: true }))
   forgotPassword(@Body() requestResDto: RequestResetDto, @RealIp() ip: string) {
@@ -49,4 +43,10 @@ export class AuthController {
   setupNewPassword(@Body() changeDto: SetNewPasswordDto, @RealIp() ip: string, @Param('reset_token') resetToken: string) {
     return this.authService.setupNewPasswordMail(changeDto, resetToken, ip)
   }
+
+  // @UseGuards(AuthGuard('jwt-refreshtoken'))
+  // @Post('refreshtoken')
+  // refreshToken(@GetUser() user: User) {
+  //   return this.authService.refreshToken(user)
+  // }
 }

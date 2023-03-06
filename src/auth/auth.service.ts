@@ -27,17 +27,18 @@ export class AuthService {
 
     async signIn(loginDto: UserLoginDto, ip: string): Promise<Object> {
         const user = await this.userService.signIn(loginDto);
-        const accessToken: string = this.getJwtAccessToken(user.email, user.role);
-        const jwt: any = this.decodeJwtAccessToken(accessToken);
-        const refreshToken: string = await this.generateRefreshToken(user.email, user.id);
+        const accessToken: string = this.getJwtAccessToken(user.email, user.role, loginDto.isKeepSignedIn);
+        const jwt: IJWTPayload = this.decodeJwtAccessToken(accessToken);
+        // const refreshToken: string = await this.generateRefreshToken(user.email, user.id);
 
         await this.userService.updateIat(user, jwt.iat);
+        await this.userService.updateLoginInfo(user.id, loginDto.isKeepSignedIn);
         delete user.password;
 
         const log = "Logged in";
         await this.logService.addLog(log, thisModule, LogType.Info, ip, user.id);
         return {
-            accessToken, refreshToken, role: user.role, message: "Berhasil masuk"
+            accessToken, role: user.role, message: "Berhasil masuk"
         }
     }
 
@@ -114,10 +115,14 @@ export class AuthService {
         });
     }
 
-    getJwtAccessToken(email: string, userRole: Role): string {
-        const payload: IJWTPayload = { email, isRefresh: false, role: userRole };
+    getJwtAccessToken(email: string, userRole: Role, isKeepSignedIn: boolean): string {
+        const payload: IJWTPayload = { email, isKeepSignedIn, role: userRole };
+        let expAt: string
+        if (isKeepSignedIn) expAt = "14d"
+        else expAt = "2d"
+
         const token = this.jwtService.sign(payload, {
-            expiresIn: '2h'
+            expiresIn: expAt
         });
         return token;
     }
@@ -126,20 +131,20 @@ export class AuthService {
         return this.jwtService.decode(token)
     }
 
-    async generateRefreshToken(email: string, user_id: number): Promise<string> {
-        var expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 6);
-        const payload: IJWTPayload = { email, isRefresh: true };
-        const token = this.jwtService.sign(payload, { expiresIn: '6d' });
-        return token;
-    }
+    // async generateRefreshToken(email: string, user_id: number): Promise<string> {
+    //     var expiryDate = new Date();
+    //     expiryDate.setDate(expiryDate.getDate() + 6);
+    //     const payload: IJWTPayload = { email, isRefresh: true };
+    //     const token = this.jwtService.sign(payload, { expiresIn: '6d' });
+    //     return token;
+    // }
 
-    async refreshToken(user: User): Promise<Object> {
-        try {
-            const accessToken = this.getJwtAccessToken(user.email, user.role);
-            return { accessToken };
-        } catch (error) {
-            throw new UnauthorizedException();
-        }
-    }
+    // async refreshToken(user: User): Promise<Object> {
+    //     try {
+    //         const accessToken = this.getJwtAccessToken(user.email, user.role);
+    //         return { accessToken };
+    //     } catch (error) {
+    //         throw new UnauthorizedException();
+    //     }
+    // }
 }
