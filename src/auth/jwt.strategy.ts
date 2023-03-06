@@ -25,9 +25,9 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
         if (!user) {
             throw new UnauthorizedException()
         }
-        if (payload.isRefresh) {
-            throw new UnauthorizedException()
-        }
+        // if (payload.isRefresh) {
+        //     throw new UnauthorizedException()
+        // }
 
         if (user.status != 1) {
             throw new UnauthorizedException("User not active or has been deleted")

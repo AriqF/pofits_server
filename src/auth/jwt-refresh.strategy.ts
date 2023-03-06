@@ -20,16 +20,16 @@ export class JWTRefreshStrategy extends PassportStrategy(Strategy, "jwt-refresht
     }
 
     async validate(payload: IJWTPayload): Promise<User> {
-        const { email, exp, isRefresh } = payload;
+        const { email, exp, isKeepSignedIn } = payload;
         const user: User = await this.userService.getOneByEmail(email)
 
         if (!user) {
             throw new UnauthorizedException()
         }
 
-        if (!isRefresh) {
-            throw new UnauthorizedException()
-        }
+        // if (!isRefresh) {
+        //     throw new UnauthorizedException()
+        // }
 
         if (user.status != 1) {
             throw new UnauthorizedException("User not active or has been deleted")

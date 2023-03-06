@@ -37,7 +37,16 @@ export class IncomeCategoryService {
         const userCategories = await this.getQueryInCat()
             .where("cr.id = :uid", { uid: userId })
             .orWhere("inc.isGlobal = :vl", { vl: true })
-            .orderBy("isGlobal", "DESC")
+            .orderBy("isGlobal", "ASC")
+            .getMany();
+        if (userCategories.length == 0) throw new NotFoundException(DataErrorID.NotFound)
+        return userCategories
+    }
+
+    async findOnlyUserCustomized(userId: number): Promise<IncomeCategory[]> {
+        const userCategories = await this.getQueryInCat()
+            .where("cr.id = :uid", { uid: userId })
+            .orWhere("inc.isGlobal = :vl", { vl: false })
             .getMany();
         if (userCategories.length == 0) throw new NotFoundException(DataErrorID.NotFound)
         return userCategories
