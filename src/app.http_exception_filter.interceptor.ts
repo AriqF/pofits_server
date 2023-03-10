@@ -13,9 +13,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const response = context.getResponse<Response>();
         const request = context.getRequest<Request>();
         let decoded: IJWTPayload;
-        // if (token) {
-        //     decoded = jwt_decode(token);
-        // }
 
         let status = exception instanceof HttpException
             ? exception.getStatus()
@@ -32,6 +29,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
         console.log({
             timestamp: moment.tz("Asia/Jakarta").format(),
+            cause: exception.message,
             ...resErr,
             ...decoded,
 
@@ -59,6 +57,7 @@ export class EntityNotFoundFilter implements ExceptionFilter {
         const context = host.switchToHttp();
         const response = context.getResponse<Response>();
         // const errMessage = exception.message;
+        console.log(exception)
         if (response.status(500)) {
             response.json({
                 code: 400,

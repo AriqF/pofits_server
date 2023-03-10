@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, MaxLength, IsOptional } from "class-validator";
+import { IsNotEmpty, IsString, MaxLength, IsOptional, MinLength } from "class-validator";
 
 
 
@@ -6,6 +6,7 @@ export class CreateExpenseCatDto {
     @IsNotEmpty()
     @IsString()
     @MaxLength(75)
+    @MinLength(2)
     title: string;
 
     @IsOptional()

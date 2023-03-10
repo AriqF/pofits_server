@@ -11,6 +11,8 @@ import { UserModule } from './user/user.module';
 import { WalletModule } from './wallet/wallet.module';
 import { IncomeCategoryModule } from './income-category/income-category.module';
 import { ExpenseCategoryModule } from './expense-category/expense-category.module';
+import { BudgetModule } from './budget/budget.module';
+import { IncomeEstimationModule } from './income-estimation/income-estimation.module';
 
 @Module({
   imports: [
@@ -49,6 +51,8 @@ import { ExpenseCategoryModule } from './expense-category/expense-category.modul
     WalletModule,
     IncomeCategoryModule,
     ExpenseCategoryModule,
+    BudgetModule,
+    IncomeEstimationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

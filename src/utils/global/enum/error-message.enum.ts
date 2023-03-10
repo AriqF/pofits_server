@@ -21,5 +21,6 @@ export enum DataErrorID {
     NotFound = "Data tidak ditemukan",
     UpdateFailed = "Gagal dalam memperbarui data. ",
     DeleteFailed = "Data gagal dihapus. ",
-    Forbidden = "Anda tidak punya akses untuk data ini. Silahkan hubungin administrator"
+    Forbidden = "Anda tidak punya akses untuk data ini. ",
+    FilterNotFound = "Pencarian tidak ditemukan"
 }
