@@ -45,6 +45,7 @@ export class ExpenseCategoryService {
         const data = await this.getQueryExpCategory()
             .where("exp.isGlobal = :val", { val: true })
             .orWhere("cr.id = :uid", { uid: userId })
+            .orderBy("exp.isGlobal", "ASC")
             .getMany();
         if (data.length == 0) throw new NotFoundException(DataErrorID.NotFound)
         return data
