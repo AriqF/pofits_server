@@ -22,7 +22,7 @@ import { IncomeEstimationModule } from './income-estimation/income-estimation.mo
       useFactory: async (configService: ConfigService) => ({
         type: 'mysql',
         host: configService.get('DB_HOST', 'localhost'),
-        port: 3306,
+        port: configService.get('DB_PORT'),
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
