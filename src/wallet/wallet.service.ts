@@ -5,11 +5,11 @@ import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
 import { DataSuccessID } from 'src/utils/global/enum/success-message.enum';
 import { LogType } from 'src/weblog/interfaces/log-type.enum';
 import { WeblogService } from 'src/weblog/weblog.service';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository, SelectQueryBuilder, UpdateResult } from 'typeorm';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { MoveWalletDto } from './dto/move-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
-import { Wallet } from './entity/wallet.entity';
+import { Wallet } from './entities/wallet.entity';
 
 const thisModule = "Wallet"
 
@@ -25,7 +25,7 @@ export class WalletService {
         const query = this.walletRepo.createQueryBuilder('wl')
             .leftJoin('wl.created_by', 'cr')
             .select([
-                'wl.id', 'wl.name', 'wl.description', 'wl.amount', 'wl.created_at',
+                'wl.id', 'wl.name', 'wl.description', 'wl.amount', 'wl.created_at', "wl.category",
                 'wl.updated_at', 'wl.deleted_at', 'cr.id', 'cr.email', 'cr.username',
             ])
         return query;
@@ -39,12 +39,20 @@ export class WalletService {
         return wallets
     }
 
-    async findOneById(walletId: number): Promise<Wallet> {
+    async findOneById(walletId: number, user: User): Promise<Wallet> {
         const wallet = await this.getWalletQuery()
             .where("wl.id = :wid", { wid: walletId })
             .getOne();
         if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
+        if (wallet.created_by.id != user.id) throw new ForbiddenException(DataErrorID.Forbidden)
         return wallet
+    }
+
+    async getOneWallet(walletId: Wallet | number): Promise<Wallet> {
+        const wallet = await this.getWalletQuery()
+            .where("wl.id = :wid", { wid: walletId })
+            .getOne();
+        return wallet;
     }
 
     async addWallet(addDto: CreateWalletDto, user: User, ip: string): Promise<Object> {
@@ -65,7 +73,6 @@ export class WalletService {
     async updateWallet(walletId: number, updDto: UpdateWalletDto, user: User, ip: string): Promise<Object> {
         const wallet = await this.walletRepo.findOne({ where: { id: walletId }, loadRelationIds: true, loadEagerRelations: true })
         if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
-        console.log(wallet)
         try {
             await this.walletRepo.update(walletId, { ...updDto })
             await this.logService.addLog("Updated a wallet", thisModule, LogType.Info, ip, user.id);
@@ -111,19 +118,53 @@ export class WalletService {
         if (!fromWallet || !toWallet) throw new NotFoundException(DataErrorID.NotFound)
         const moveAmount: number = moveDto.amount
 
+        if (fromWallet.amount < moveAmount) throw new BadRequestException("Dana yang dipindahkan tidak dapat melebihi total dana")
         try {
-            if (fromWallet.amount < moveAmount) throw new BadRequestException("Dana yang dipindahkan tidak dapat melebihi total dana")
-            await this.walletRepo.update(fromWallet.id, {
-                amount: fromWallet.amount - moveAmount
-            })
-            await this.walletRepo.update(toWallet.id, {
-                amount: Number(moveAmount) + Number(toWallet.amount)
-            })
+            this.subsWalletAmount(fromWallet.id, moveAmount);
+            this.addWalletAmount(toWallet.id, moveAmount);
             await this.logService.addLog("Moved wallet's amount", thisModule, LogType.Info, ip, user.id);
             return { message: "Dana berhasil dipindahkan" }
         } catch (error) {
             await this.logService.addLog("Failed to moved wallet's amount: " + String(error), thisModule, LogType.Info, ip, user.id);
-            throw new InternalServerErrorException("Gagal dalam memindahkan dana. " + error)
+            // throw InternalServerErrorException("Gagal dalam memindahkan dana. " + error)
+            throw new InternalServerErrorException(error)
         }
     }
+
+    async addWalletAmount(walletId: number | Wallet, amount: number): Promise<UpdateResult> {
+        const wallet = await this.getWalletQuery()
+            .where("wl.id = :wid", { wid: walletId })
+            .getOne()
+        if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
+        try {
+            return await this.walletRepo.update(walletId, {
+                amount: Number(wallet.amount) + Number(amount)
+            });
+        } catch (error) {
+            throw new InternalServerErrorException(error)
+        }
+    }
+
+    async subsWalletAmount(walletId: number | Wallet, amount: number) {
+        const wallet = await this.getWalletQuery()
+            .where("wl.id = :wid", { wid: walletId })
+            .getOne()
+        if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
+        try {
+            return await this.walletRepo.update(walletId, {
+                amount: Number(wallet.amount) - Number(amount)
+            });
+        } catch (error) {
+            throw new InternalServerErrorException(error)
+        }
+    }
+
+    async editWalletAmount(walletId: number | Wallet, amount: number): Promise<UpdateResult> {
+        const wallet = await this.getWalletQuery()
+            .where("wl.id = :wid", { wid: walletId })
+            .getOne()
+        if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
+        return await this.walletRepo.update(walletId, { amount: amount })
+    }
+
 }

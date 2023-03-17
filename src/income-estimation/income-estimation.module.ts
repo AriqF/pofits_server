@@ -13,6 +13,7 @@ import { WeblogModule } from 'src/weblog/weblog.module';
     WeblogModule
   ],
   controllers: [IncomeEstimationController],
-  providers: [IncomeEstimationService]
+  providers: [IncomeEstimationService],
+  exports: [IncomeEstimationService],
 })
 export class IncomeEstimationModule { }

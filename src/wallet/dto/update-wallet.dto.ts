@@ -1,4 +1,5 @@
-import { IsString, IsNotEmpty, MaxLength, IsOptional } from "class-validator";
+import { IsString, IsNotEmpty, MaxLength, IsOptional, IsEnum } from "class-validator";
+import { WalletCategory } from "../interfaces/wallet-category.enum";
 
 
 export class UpdateWalletDto {
@@ -11,5 +12,10 @@ export class UpdateWalletDto {
     @IsOptional()
     @MaxLength(255)
     description: string;
+
+    // @IsString()
+    @IsEnum(WalletCategory, { message: "Kategori: Rekening Bank, E-Money, atau, Tunai" })
+    @IsNotEmpty()
+    category: WalletCategory;
 
 }

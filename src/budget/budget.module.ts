@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { BudgetService } from './budget.service';
 import { BudgetController } from './budget.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Budget } from './entity/budget.entity';
+import { Budget } from './entities/budget.entity';
 import { WeblogModule } from 'src/weblog/weblog.module';
 
 @Module({
@@ -13,6 +13,7 @@ import { WeblogModule } from 'src/weblog/weblog.module';
     WeblogModule
   ],
   controllers: [BudgetController],
-  providers: [BudgetService]
+  providers: [BudgetService],
+  exports: [BudgetService],
 })
 export class BudgetModule { }

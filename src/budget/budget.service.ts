@@ -1,18 +1,18 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
-import { ExpenseCategory } from 'src/expense-category/entity/expense-category.entity';
+import { ExpenseCategory } from 'src/expense-category/entities/expense-category.entity';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
 import { DataSuccessID } from 'src/utils/global/enum/success-message.enum';
-import { convertStartEndDateFmt, formatMonthNumber, getDaysInMonth, getStartEndDateFmt, validateMoreThanDate } from 'src/utils/helper';
+import { convertStartEndDateFmt, formatMonthNumber, getDaysInMonth, getListMonthDifferenece, getMonthDifference, getStartEndDateFmt, validateMoreThanDate } from 'src/utils/helper';
 import { LogType } from 'src/weblog/interfaces/log-type.enum';
 import { WeblogService } from 'src/weblog/weblog.service';
 import { Between, Repository, SelectQueryBuilder } from 'typeorm';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { BudgetFilterDto } from './dto/filter-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
-import { Budget } from './entity/budget.entity';
+import { Budget } from './entities/budget.entity';
 
 const thisModule = "Budget"
 
@@ -67,13 +67,24 @@ export class BudgetService {
         return budgets
     }
 
+    async getOneById(id: number): Promise<Budget> {
+        return this.budgetRepo.findOne({ where: { id: id } })
+    }
+
+    async getMonthlyBudgetByCategory(cid: number | ExpenseCategory, date: Date): Promise<Budget> {
+        const budget = await this.getQueryBudget()
+            .where("cat.id = :id", { id: cid })
+            .andWhere("budget.start_date = :sd", { sd: date })
+            .getOne();
+        return budget
+    }
+
     async addBudget(createDto: CreateBudgetDto, user: User, ip: string): Promise<Object> {
         let { start_date, end_date, isRepeat, category } = createDto
 
         if (isRepeat && !end_date) {
             throw new BadRequestException("Bulan berakhir tidak boleh kosong jika pengeluaran berulang!")
         }
-
 
         if (isRepeat && end_date) {
             if (!validateMoreThanDate(start_date, end_date)) {
@@ -88,15 +99,20 @@ export class BudgetService {
             throw new ConflictException("Kategori ini sudah memiliki budget pada periode ini")
         }
 
-        let newData = this.budgetRepo.create({
-            start_date: startDateFmt,
-            end_date: endDateFmt,
-            category, isRepeat,
-            amount: createDto.amount,
-            created_by: user
-        });
         try {
-            await this.budgetRepo.save(newData);
+            const sDateList = getListMonthDifferenece(startDateFmt, endDateFmt);
+            sDateList.forEach(async (valDate) => {
+                let endDate = new Date(moment(valDate).endOf("month").format("YYYY-MM-DD"));
+                let newData = this.budgetRepo.create({
+                    start_date: valDate,
+                    end_date: endDate,
+                    category, isRepeat,
+                    amount: createDto.amount,
+                    created_by: user
+                });
+                await this.budgetRepo.save(newData);
+            })
+
             await this.logService.addLog("Added a budget", thisModule, LogType.Info, ip, user.id)
             return { message: DataSuccessID.DataAdded }
         } catch (error) {
@@ -104,6 +120,7 @@ export class BudgetService {
             throw new InternalServerErrorException(error)
         }
     }
+
 
     async validateCurrentMonthBudget(userId: number, category: ExpenseCategory, startDate: Date, endDate: Date): Promise<boolean> {
         const findData: Budget = await this.getQueryBudget()
@@ -161,6 +178,11 @@ export class BudgetService {
             await this.logService.addLog("Failed to delete a budget permanently", thisModule, LogType.Failure, ip, user.id)
             throw new InternalServerErrorException(error)
         }
+    }
+
+    async getPercentageBudgetUsed(budgetId: number) {
+        const budget = await this.budgetRepo.findOne({ where: { id: budgetId } });
+
     }
 
     // !CREATE TRANSACTION SERVICE FIRST

@@ -13,6 +13,7 @@ import { IncomeCategoryModule } from './income-category/income-category.module';
 import { ExpenseCategoryModule } from './expense-category/expense-category.module';
 import { BudgetModule } from './budget/budget.module';
 import { IncomeEstimationModule } from './income-estimation/income-estimation.module';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { IncomeEstimationModule } from './income-estimation/income-estimation.mo
     ExpenseCategoryModule,
     BudgetModule,
     IncomeEstimationModule,
+    TransactionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

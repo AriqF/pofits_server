@@ -1,6 +1,6 @@
 import { Type } from "class-transformer";
 import { IsNumber, IsNotEmpty, IsBoolean, IsDate, IsOptional } from "class-validator";
-import { IncomeCategory } from "src/income-category/entity/income-category.entity";
+import { IncomeCategory } from "src/income-category/entities/income-category.entity";
 
 export class CreateEstimationDto {
     @Type(() => Number)

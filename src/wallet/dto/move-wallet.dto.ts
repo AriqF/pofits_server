@@ -1,6 +1,6 @@
 import { Transform, Type } from "class-transformer";
 import { IsNotEmpty, IsNumber } from "class-validator";
-import { Wallet } from "../entity/wallet.entity";
+import { Wallet } from "../entities/wallet.entity";
 
 
 export class MoveWalletDto {

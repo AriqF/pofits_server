@@ -2,11 +2,11 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
 import { BudgetFilterDto } from 'src/budget/dto/filter-budget.dto';
-import { IncomeCategory } from 'src/income-category/entity/income-category.entity';
+import { IncomeCategory } from 'src/income-category/entities/income-category.entity';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
 import { DataSuccessID } from 'src/utils/global/enum/success-message.enum';
-import { convertStartEndDateFmt, getStartEndDateFmt, validateMoreThanDate } from 'src/utils/helper';
+import { convertStartEndDateFmt, getListMonthDifferenece, getStartEndDateFmt, validateMoreThanDate } from 'src/utils/helper';
 import { LogType } from 'src/weblog/interfaces/log-type.enum';
 import { WeblogService } from 'src/weblog/weblog.service';
 import { Repository, SelectQueryBuilder } from 'typeorm';
@@ -66,6 +66,18 @@ export class IncomeEstimationService {
     return data
   }
 
+  async getOneById(id: number): Promise<IncomeEstimation> {
+    return await this.estimationRepo.findOne({ where: { id: id } })
+  }
+
+  async getMonthEstimationByCategory(cid: number | IncomeCategory, date: Date): Promise<IncomeEstimation> {
+    const data = await this.getQueryEstimation()
+      .where("cat.id = :id", { id: cid })
+      .andWhere("est.start_date = :sd", { sd: date })
+      .getOne();
+    return data;
+  }
+
   async createIncomeEstimation(dto: CreateEstimationDto, user: User, ip: string): Promise<Object> {
     let { start_date, end_date, isRepeat, category } = dto
 
@@ -86,16 +98,20 @@ export class IncomeEstimationService {
       throw new ConflictException("Kategori ini sudah memiliki budget pada periode ini")
     }
 
-    let newData = this.estimationRepo.create({
-      start_date: startDateFmt,
-      end_date: endDateFmt,
-      category, isRepeat,
-      amount: dto.amount,
-      created_by: user
-    });
-
     try {
-      await this.estimationRepo.save(newData);
+      const sDateList = getListMonthDifferenece(startDateFmt, endDateFmt);
+      sDateList.forEach(async (valDate) => {
+        let endDate = new Date(moment(valDate).endOf("month").format("YYYY-MM-DD"));
+        let newData = this.estimationRepo.create({
+          start_date: valDate,
+          end_date: endDate,
+          category, isRepeat,
+          amount: dto.amount,
+          created_by: user
+        });
+        await this.estimationRepo.save(newData);
+      });
+
       await this.logService.addLog("Added a income estimation", thisModule, LogType.Info, ip, user.id)
       return { message: DataSuccessID.DataAdded }
     } catch (error) {

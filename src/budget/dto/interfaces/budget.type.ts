@@ -1,4 +1,4 @@
-import { Budget } from "src/budget/entity/budget.entity"
+import { Budget } from "src/budget/entities/budget.entity"
 
 
 export interface ProcessedBudget extends Budget {

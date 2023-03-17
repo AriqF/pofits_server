@@ -24,8 +24,8 @@ export class WalletController {
     @Get(":id")
     @UseGuards(JwtAuthGuard)
     @UsePipes(new ValidationPipe({ transform: true }))
-    getWalletById(@Param("id") walletId: number) {
-        return this.walletService.findOneById(walletId)
+    getWalletById(@Param("id") walletId: number, @GetUser() user: User) {
+        return this.walletService.findOneById(walletId, user)
     }
 
     @Post()

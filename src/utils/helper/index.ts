@@ -29,6 +29,32 @@ export function convertStartEndDateFmt(start: Date, end: Date, isRepeat: boolean
     return [startDate, endDate]
 }
 
+export function getListMonthDifferenece(date1: Date, date2: Date): Date[] {
+    let months: Date[] = [date1];
+    const monthDiff: number = getMonthDifference(date1, date2) + 1;
+    for (let index = 1; index < monthDiff; index++) {
+        let nextMonth = getNextMonthDate(months[index - 1])
+        months.push(getDateStartMonth(nextMonth))
+    }
+    return months
+}
+
+export function getNextMonthDate(currDate: Date): Date {
+    return new Date(currDate.getFullYear(), currDate.getMonth() + 1, 2)
+}
+
+export function getMonthDifference(date1: Date, date2: Date): number {
+    return Math.abs(date1.getMonth() - date2.getMonth())
+}
+
+export function getDateStartMonth(date: Date): Date {
+    return new Date(moment(date).startOf("month").format('YYYY-MM-DD'))
+}
+
+export function getDateEndMonth(date: Date): Date {
+    return new Date(moment(date).endOf("month").format('YYYY-MM-DD'))
+}
+
 export function validateMoreThanDate(start: Date, end: Date): boolean {
     return start < end
 }
