@@ -13,6 +13,7 @@ import { WeblogModule } from 'src/weblog/weblog.module';
     WeblogModule
   ],
   controllers: [BudgetController],
-  providers: [BudgetService]
+  providers: [BudgetService],
+  exports: [BudgetService],
 })
 export class BudgetModule { }
