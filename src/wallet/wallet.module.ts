@@ -14,6 +14,6 @@ import { WeblogModule } from 'src/weblog/weblog.module';
   ],
   providers: [WalletService],
   controllers: [WalletController],
-
+  exports: [WalletService],
 })
 export class WalletModule { }
