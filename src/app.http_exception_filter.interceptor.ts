@@ -25,15 +25,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
         if (request.headers["authorization"]) {
             const token = request.headers["authorization"] as string;
             decoded = jwt_decode(token);
+            delete decoded.iat;
+            delete decoded.exp;
+            delete decoded.isKeepSignedIn;
         }
 
-        console.log({
-            timestamp: moment.tz("Asia/Jakarta").format(),
-            cause: exception.message,
-            ...resErr,
-            ...decoded,
-
-        })
         if (resErr.statusCode) {
             resErr.code = resErr.statusCode;
             delete resErr.statusCode;
@@ -43,6 +39,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
             status = 422
             resErr.code = 422;
         }
+
+        console.log({
+            timestamp: moment.tz("Asia/Jakarta").format(),
+            cause: exception.message,
+            ...resErr,
+            ...decoded
+
+        })
+
         response
             .status(status)
             .json({
@@ -62,13 +67,13 @@ export class EntityNotFoundFilter implements ExceptionFilter {
             response.json({
                 code: 400,
                 message: "Terjadi kesalahan",
-                timestamp: new Date().toISOString()
+                timestamp: moment.tz("Asia/Jakarta").format()
             });
         } else if (response.status(404)) {
             response.json({
                 code: 404,
                 message: "Data tidak ditemukan",
-                timestamp: new Date().toISOString()
+                timestamp: moment.tz("Asia/Jakarta").format()
             });
         } else {
             response
@@ -76,7 +81,7 @@ export class EntityNotFoundFilter implements ExceptionFilter {
                 .json({
                     code: 400,
                     message: "Bad Request",
-                    timestamp: new Date().toISOString()
+                    timestamp: moment.tz("Asia/Jakarta").format()
                 });
         }
 
