@@ -9,7 +9,7 @@ import { Repository, SelectQueryBuilder, UpdateResult } from 'typeorm';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { MoveWalletDto } from './dto/move-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
-import { Wallet } from './entity/wallet.entity';
+import { Wallet } from './entities/wallet.entity';
 
 const thisModule = "Wallet"
 
@@ -25,7 +25,7 @@ export class WalletService {
         const query = this.walletRepo.createQueryBuilder('wl')
             .leftJoin('wl.created_by', 'cr')
             .select([
-                'wl.id', 'wl.name', 'wl.description', 'wl.amount', 'wl.created_at',
+                'wl.id', 'wl.name', 'wl.description', 'wl.amount', 'wl.created_at', "wl.category",
                 'wl.updated_at', 'wl.deleted_at', 'cr.id', 'cr.email', 'cr.username',
             ])
         return query;

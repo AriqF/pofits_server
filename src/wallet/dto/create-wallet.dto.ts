@@ -1,5 +1,6 @@
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from "class-validator";
+import { WalletCategory } from "../interfaces/wallet-category.enum";
 
 
 export class CreateWalletDto {
@@ -14,6 +15,10 @@ export class CreateWalletDto {
     @MaxLength(255)
     description: string;
 
+    @IsEnum(WalletCategory)
+    category: WalletCategory;
+
+    @IsNotEmpty()
     @IsNumber()
     @Type(() => Number)
     amount: number;

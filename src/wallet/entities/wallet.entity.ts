@@ -1,5 +1,6 @@
 import { User } from "src/user/entities/user.entity";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { WalletCategory } from "../interfaces/wallet-category.enum";
 
 
 @Entity('wallets')
@@ -15,6 +16,9 @@ export class Wallet {
 
     @Column({ type: "bigint" })
     amount: number;
+
+    @Column({ type: "enum", default: WalletCategory.Bank, enum: WalletCategory })
+    category: WalletCategory;
 
     @CreateDateColumn()
     created_at: Date;
