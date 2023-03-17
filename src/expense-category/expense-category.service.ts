@@ -10,7 +10,7 @@ import { WeblogService } from 'src/weblog/weblog.service';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { CreateExpenseCatDto } from './dto/create-expense-category.dto';
 import { UpdateExpCatDto } from './dto/update-expense-category.dto';
-import { ExpenseCategory } from './entity/expense-category.entity';
+import { ExpenseCategory } from './entities/expense-category.entity';
 
 const thisModule = "Expense Category"
 

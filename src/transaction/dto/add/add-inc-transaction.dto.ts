@@ -1,5 +1,5 @@
 import { IsNotEmpty } from "class-validator";
-import { IncomeCategory } from "src/income-category/entity/income-category.entity";
+import { IncomeCategory } from "src/income-category/entities/income-category.entity";
 import { BaseAddTransactionDto } from "./base-add-transaction.dto";
 
 

@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, ForbiddenException, Injectable,
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
 import { BudgetFilterDto } from 'src/budget/dto/filter-budget.dto';
-import { IncomeCategory } from 'src/income-category/entity/income-category.entity';
+import { IncomeCategory } from 'src/income-category/entities/income-category.entity';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
 import { DataSuccessID } from 'src/utils/global/enum/success-message.enum';

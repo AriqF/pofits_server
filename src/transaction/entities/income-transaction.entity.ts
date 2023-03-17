@@ -1,6 +1,6 @@
-import { IncomeCategory } from "src/income-category/entity/income-category.entity";
+import { IncomeCategory } from "src/income-category/entities/income-category.entity";
 import { User } from "src/user/entities/user.entity";
-import { Wallet } from "src/wallet/entity/wallet.entity";
+import { Wallet } from "src/wallet/entities/wallet.entity";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 

@@ -9,7 +9,7 @@ import { WeblogService } from 'src/weblog/weblog.service';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { CreateIncCatDto } from './dto/create-income-category.dto';
 import { UpdateIncCatDto } from './dto/update-income-category.dto';
-import { IncomeCategory } from './entity/income-category.entity';
+import { IncomeCategory } from './entities/income-category.entity';
 
 const thisModule = "Income Category";
 

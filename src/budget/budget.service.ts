@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
-import { ExpenseCategory } from 'src/expense-category/entity/expense-category.entity';
+import { ExpenseCategory } from 'src/expense-category/entities/expense-category.entity';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
 import { DataSuccessID } from 'src/utils/global/enum/success-message.enum';
@@ -12,7 +12,7 @@ import { Between, Repository, SelectQueryBuilder } from 'typeorm';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { BudgetFilterDto } from './dto/filter-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
-import { Budget } from './entity/budget.entity';
+import { Budget } from './entities/budget.entity';
 
 const thisModule = "Budget"
 
