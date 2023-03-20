@@ -14,6 +14,8 @@ import { ExpenseCategoryModule } from './expense-category/expense-category.modul
 import { BudgetModule } from './budget/budget.module';
 import { IncomeEstimationModule } from './income-estimation/income-estimation.module';
 import { TransactionModule } from './transaction/transaction.module';
+import { ExpenseTransactionModule } from './expense-transaction/expense-transaction.module';
+import { IncomeTransactionModule } from './income-transaction/income-transaction.module';
 
 @Module({
   imports: [
@@ -55,6 +57,8 @@ import { TransactionModule } from './transaction/transaction.module';
     BudgetModule,
     IncomeEstimationModule,
     TransactionModule,
+    ExpenseTransactionModule,
+    IncomeTransactionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
