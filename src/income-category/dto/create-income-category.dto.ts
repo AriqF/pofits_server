@@ -12,7 +12,7 @@ export class CreateIncCatDto {
     @IsOptional()
     @IsString()
     @MaxLength(225)
-    description: string;
+    description?: string;
 
     @IsNotEmpty()
     @IsEnum(IncomeType, { message: "jenis pemasukan berupa 'aktif' atau 'pasif'" })

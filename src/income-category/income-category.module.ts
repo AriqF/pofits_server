@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WeblogModule } from 'src/weblog/weblog.module';
 import { IncomeCategory } from './entities/income-category.entity';
@@ -10,9 +10,10 @@ import { IncomeCategoryService } from './income-category.service';
     TypeOrmModule.forFeature([
       IncomeCategory
     ]),
-    WeblogModule,
+    forwardRef(() => WeblogModule),
   ],
   controllers: [IncomeCategoryController],
-  providers: [IncomeCategoryService]
+  providers: [IncomeCategoryService],
+  exports: [IncomeCategoryService],
 })
 export class IncomeCategoryModule { }

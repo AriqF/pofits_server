@@ -15,7 +15,7 @@ export class ExpenseCategory {
     @Column({ nullable: true })
     description: string;
 
-    @Column({ type: "boolean" })
+    @Column({ type: "boolean", default: false })
     isGlobal: boolean;
 
     @ManyToOne(() => User, user => user.id, { onDelete: "CASCADE" })

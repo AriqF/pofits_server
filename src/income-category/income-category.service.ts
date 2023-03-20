@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Role } from 'src/user/interfaces/role.enum';
@@ -10,6 +10,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { CreateIncCatDto } from './dto/create-income-category.dto';
 import { UpdateIncCatDto } from './dto/update-income-category.dto';
 import { IncomeCategory } from './entities/income-category.entity';
+import { generalIncomeCategories } from './helper';
 
 const thisModule = "Income Category";
 
@@ -18,6 +19,7 @@ export class IncomeCategoryService {
     constructor(
         @InjectRepository(IncomeCategory)
         private incatRepo: Repository<IncomeCategory>,
+        @Inject(forwardRef(() => WeblogService))
         private readonly logService: WeblogService,
     ) { }
 
@@ -146,5 +148,14 @@ export class IncomeCategoryService {
             await this.logService.addLog("Failed to delete income category", thisModule, LogType.Failure, ip, user.id)
             throw new InternalServerErrorException(DataErrorID.DeleteFailed)
         }
+    }
+
+    async generateGeneralCategories(user: User) {
+        generalIncomeCategories.forEach(async (category) => {
+            await this.incatRepo.insert({
+                ...category,
+                created_by: user
+            })
+        })
     }
 }

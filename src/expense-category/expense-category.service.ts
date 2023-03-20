@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ForbiddenException, InternalServerErrorException } from '@nestjs/common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
@@ -11,6 +11,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { CreateExpenseCatDto } from './dto/create-expense-category.dto';
 import { UpdateExpCatDto } from './dto/update-expense-category.dto';
 import { ExpenseCategory } from './entities/expense-category.entity';
+import { generalExpenseCategories } from './helper';
 
 const thisModule = "Expense Category"
 
@@ -19,6 +20,7 @@ export class ExpenseCategoryService {
     constructor(
         @InjectRepository(ExpenseCategory)
         private expcatRepo: Repository<ExpenseCategory>,
+        @Inject(forwardRef(() => WeblogService))
         private readonly logService: WeblogService
     ) { }
 
@@ -124,7 +126,14 @@ export class ExpenseCategoryService {
             await this.logService.addLog("Failed to permanently delete expense category", thisModule, LogType.Failure, ip, user.id)
             throw new InternalServerErrorException(DataErrorID.DeleteFailed)
         }
-
     }
 
+    async generateGeneralCategory(user: User) {
+        generalExpenseCategories.forEach(async (category, index) => {
+            await this.expcatRepo.insert({
+                ...category,
+                created_by: user
+            })
+        })
+    }
 }
