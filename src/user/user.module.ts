@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { WeblogModule } from 'src/weblog/weblog.module';
+import { ExpenseCategoryModule } from 'src/expense-category/expense-category.module';
+import { IncomeCategoryModule } from 'src/income-category/income-category.module';
 
 @Module({
   imports: [
@@ -12,7 +14,8 @@ import { WeblogModule } from 'src/weblog/weblog.module';
       User,
     ]),
     forwardRef(() => WeblogModule),
-    // WeblogModule,
+    forwardRef(() => IncomeCategoryModule),
+    forwardRef(() => ExpenseCategoryModule),
   ],
   controllers: [UserController],
   providers: [UserService],

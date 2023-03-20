@@ -12,5 +12,5 @@ export class CreateExpenseCatDto {
     @IsOptional()
     @IsString()
     @MaxLength(225)
-    description: string;
+    description?: string;
 }

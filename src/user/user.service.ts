@@ -15,6 +15,8 @@ import { UserFilterDto } from './dto/search-user.dto';
 import { SetNewPasswordDto } from 'src/auth/dto/new-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { DataErrorID, UserErrorID } from 'src/utils/global/enum/error-message.enum';
+import { ExpenseCategoryService } from 'src/expense-category/expense-category.service';
+import { IncomeCategoryService } from 'src/income-category/income-category.service';
 
 const thisModule = "User"
 
@@ -25,6 +27,10 @@ export class UserService {
     private userRepo: Repository<User>,
     @Inject(forwardRef(() => WeblogService))
     private readonly logService: WeblogService,
+    @Inject(forwardRef(() => ExpenseCategoryService))
+    private readonly expCatService: ExpenseCategoryService,
+    @Inject(forwardRef(() => IncomeCategoryService))
+    private readonly incCatService: IncomeCategoryService,
   ) { }
 
   async signUp(registerDto: UserRegisterDto, isAdminRegis?: boolean): Promise<User> {
@@ -40,6 +46,9 @@ export class UserService {
 
     try {
       user = await this.userRepo.save(user)
+      //generate general category for income and expense
+      await this.expCatService.generateGeneralCategory(user);
+      await this.incCatService.generateGeneralCategories(user)
       delete user.password
       return user
     } catch (error) {
@@ -70,7 +79,7 @@ export class UserService {
     } else if (user) {
       throw new UnauthorizedException(UserErrorID.IncorrectAuth);
     } else {
-      throw new UnauthorizedException(UserErrorID.AccountNotExist)
+      throw new UnauthorizedException(UserErrorID.AccountNotExist);
     }
   }
 
