@@ -35,7 +35,7 @@ export class WalletService {
         const wallets = await this.getWalletQuery()
             .where('cr.id = :uid', { uid: userId })
             .getMany();
-        if (wallets.length == 0) throw new NotFoundException(DataErrorID.NotFound)
+        // if (wallets.length == 0) throw new NotFoundException(DataErrorID.NotFound)
         return wallets
     }
 
