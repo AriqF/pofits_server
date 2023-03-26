@@ -4,7 +4,7 @@ import { BudgetService } from 'src/budget/budget.service';
 import { ExpenseCategory } from 'src/expense-category/entities/expense-category.entity';
 import { EditTransactionsDto } from 'src/transaction/dto/edit/edit-transactions.dto';
 import { TransactionsFilterDto } from 'src/transaction/dto/transactions-filter.dto';
-import { ExpenseTransaction } from 'src/transaction/entities/expense-transaction.entity';
+import { ExpenseTransaction } from 'src/expense-transaction/entities/expense-transaction.entity';
 import { getAccumulatedTransactions, getExpenseDiffPercentage } from 'src/transaction/helper';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
