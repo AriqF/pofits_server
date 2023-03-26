@@ -17,4 +17,8 @@ export class CreateIncCatDto {
     @IsNotEmpty()
     @IsEnum(IncomeType, { message: "jenis pemasukan berupa 'aktif' atau 'pasif'" })
     income_type: IncomeType;
+
+    @IsNotEmpty()
+    @IsString()
+    icon: string;
 }

@@ -13,4 +13,9 @@ export class CreateExpenseCatDto {
     @IsString()
     @MaxLength(225)
     description?: string;
+
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(255)
+    icon: string;
 }

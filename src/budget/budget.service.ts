@@ -31,7 +31,7 @@ export class BudgetService {
             .select([
                 "budget.id", "budget.amount", "budget.start_date", "budget.end_date",
                 "budget.isRepeat", "budget.created_at", "budget.updated_at", "budget.deleted_at",
-                "cat.id", "cat.title", "cr.id", "cr.email", "cr.username",
+                "cat.id", "cat.title", "cat.icon", "cr.id", "cr.email", "cr.username",
             ])
         return query
     }
@@ -42,7 +42,7 @@ export class BudgetService {
         const data = await this.getQueryBudget()
             .where("cr.id = :uid", { uid: userId })
             .getMany();
-        if (data.length == 0) throw new NotFoundException(DataErrorID.NotFound)
+        // if (data.length == 0) throw new NotFoundException(DataErrorID.NotFound)
         return data;
     }
 
@@ -63,7 +63,7 @@ export class BudgetService {
             .where("cr.id = :uid", { uid: userId })
             .andWhere("budget.start_date = :val", { val: searchDate })
             .getMany();
-        if (budgets.length == 0) throw new NotFoundException(DataErrorID.FilterNotFound)
+        // if (budgets.length == 0) throw new NotFoundException(DataErrorID.FilterNotFound)
         return budgets
     }
 

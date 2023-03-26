@@ -18,6 +18,9 @@ export class ExpenseCategory {
     @Column({ type: "boolean", default: false })
     isGlobal: boolean;
 
+    @Column()
+    icon: string;
+
     @ManyToOne(() => User, user => user.id, { onDelete: "CASCADE" })
     @JoinColumn({ name: "created_by" })
     created_by: User;

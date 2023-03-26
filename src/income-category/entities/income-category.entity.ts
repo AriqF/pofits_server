@@ -21,6 +21,9 @@ export class IncomeCategory {
     @Column({ enum: IncomeType, type: "enum", default: IncomeType.Active })
     income_type: IncomeType;
 
+    @Column()
+    icon: string;
+
     @Column({ type: "boolean", default: false })
     isGlobal: boolean;
 

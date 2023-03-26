@@ -8,7 +8,7 @@ export class Budget {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => ExpenseCategory, category => category.id, { onDelete: "CASCADE" })
+    @ManyToOne(() => ExpenseCategory, category => category.id, { onDelete: "NO ACTION" })
     @JoinColumn({ name: "category" })
     category: ExpenseCategory;
 
