@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ExpenseTransactionService } from './expense-transaction.service';
 import { ExpenseTransactionController } from './expense-transaction.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -13,7 +13,7 @@ import { WalletModule } from 'src/wallet/wallet.module';
       ExpenseTransaction,
     ]),
     WeblogModule,
-    BudgetModule,
+    forwardRef(() => BudgetModule),
     WalletModule,
   ],
   controllers: [ExpenseTransactionController],

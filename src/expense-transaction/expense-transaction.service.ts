@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BudgetService } from 'src/budget/budget.service';
 import { ExpenseCategory } from 'src/expense-category/entities/expense-category.entity';
@@ -24,8 +24,9 @@ export class ExpenseTransactionService {
         @InjectRepository(ExpenseTransaction)
         private expenseRepo: Repository<ExpenseTransaction>,
         private logService: WeblogService,
-        private budgetService: BudgetService,
         private walletService: WalletService,
+        @Inject(forwardRef(() => BudgetService))
+        private readonly budgetService: BudgetService,
     ) { }
 
     getQueryExpenseTrans(): SelectQueryBuilder<ExpenseTransaction> {
@@ -84,7 +85,7 @@ export class ExpenseTransactionService {
 
 
 
-    async getExpenseTransactionsByCategory(categoryId: ExpenseCategory, date: Date): Promise<ExpenseTransaction[]> {
+    async getExpenseTransactionsByCategory(categoryId: ExpenseCategory | number, date: Date): Promise<ExpenseTransaction[]> {
         const transactions = await this.getQueryExpenseTrans()
             .where("cat.id = :cid", { cid: categoryId })
             .andWhere("exp.date >= :sd", { sd: getDateStartMonth(date) })
@@ -103,30 +104,30 @@ export class ExpenseTransactionService {
         let hasBudget: boolean = false
         let budgetAlmostLimit: boolean = false
         let budgetOverLimit: boolean = false
-        let percentage: number | null
+        let percentage: number = 0
         let accAmount: number = 0;
 
         try {
+            newData = await this.expenseRepo.save(newData);
             const currMonth: Date = getDateStartMonth(dto.date)
             //find budget
             const budget = await this.budgetService.getMonthlyBudgetByCategory(dto.category, currMonth);
             //get past transactions
             const pastTrans = await this.getExpenseTransactionsByCategory(dto.category, dto.date);
-
             if (pastTrans.length != 0) {
                 accAmount = getAccumulatedTransactions(pastTrans)
+                if (budget) {
+                    percentage = (accAmount / budget.amount) * 100
+                }
             }
 
             if (budget) {
                 hasBudget = true;
-                percentage = getExpenseDiffPercentage(budget, accAmount)
                 if (percentage > 75) budgetAlmostLimit = true;
                 if (percentage >= 100) budgetOverLimit = true;
             }
 
             if (dto.wallet) await this.walletService.subsWalletAmount(dto.wallet, dto.amount)
-
-            newData = await this.expenseRepo.save(newData);
             return { message: DataSuccessID.DataAdded, budgetAlmostLimit, hasBudget, percentage, budgetOverLimit }
         } catch (error) {
             throw new InternalServerErrorException(error)
