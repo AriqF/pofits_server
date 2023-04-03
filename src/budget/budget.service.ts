@@ -1,17 +1,20 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
 import { ExpenseCategory } from 'src/expense-category/entities/expense-category.entity';
+import { ExpenseCategoryService } from 'src/expense-category/expense-category.service';
+import { ExpenseTransactionService } from 'src/expense-transaction/expense-transaction.service';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
 import { DataSuccessID } from 'src/utils/global/enum/success-message.enum';
-import { convertStartEndDateFmt, formatMonthNumber, getDaysInMonth, getListMonthDifferenece, getMonthDifference, getStartEndDateFmt, validateMoreThanDate } from 'src/utils/helper';
+import { convertStartEndDateFmt, formatMonthNumber, getDateStartMonth, getDaysInMonth, getListMonthDifferenece, getMonthDifference, getStartEndDateFmt, validateMoreThanDate } from 'src/utils/helper';
 import { LogType } from 'src/weblog/interfaces/log-type.enum';
 import { WeblogService } from 'src/weblog/weblog.service';
 import { Between, Repository, SelectQueryBuilder } from 'typeorm';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { BudgetFilterDto } from './dto/filter-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
+import { ProcessedBudget } from './entities/budget-type';
 import { Budget } from './entities/budget.entity';
 
 const thisModule = "Budget"
@@ -22,6 +25,8 @@ export class BudgetService {
         @InjectRepository(Budget)
         private budgetRepo: Repository<Budget>,
         private logService: WeblogService,
+        @Inject(forwardRef(() => ExpenseTransactionService))
+        private readonly expenseService: ExpenseTransactionService,
     ) { }
 
     getQueryBudget(): SelectQueryBuilder<Budget> {
@@ -36,27 +41,31 @@ export class BudgetService {
         return query
     }
 
-    //!CONVERT INTO PROCESSED BUDGET
-
-    async findAllUserBudget(userId: number): Promise<Budget[]> {
+    async findAllUserBudget(userId: number): Promise<ProcessedBudget[]> {
         const data = await this.getQueryBudget()
             .where("cr.id = :uid", { uid: userId })
             .getMany();
         // if (data.length == 0) throw new NotFoundException(DataErrorID.NotFound)
-        return data;
+        let processed: ProcessedBudget[] = [];
+        for (const budget of data) {
+            let temp = await this.convertIntoProcessed(budget)
+            processed.push(temp)
+        }
+        return processed
     }
 
-    async findById(id: number, user: User): Promise<Budget> {
+    async findById(id: number, user: User): Promise<ProcessedBudget> {
         const data = await this.getQueryBudget()
             .where("budget.id = :bid", { bid: id })
             // .andWhere("cr.id = :uid", { uid: user.id })
             .getOne()
         if (!data) throw new NotFoundException(DataErrorID.NotFound)
         if (data.created_by.id != user.id) throw new ForbiddenException(DataErrorID.Forbidden)
-        return data
+        const processed = await this.convertIntoProcessed(data);
+        return processed
     }
 
-    async findAllUserBudgetFilter(userId: number, filter: BudgetFilterDto): Promise<Budget[]> {
+    async findAllUserBudgetFilter(userId: number, filter: BudgetFilterDto): Promise<ProcessedBudget[]> {
         let { month } = filter;
         let searchDate = new Date(moment(month).startOf("month").format("YYYY-MM-DD"))
         const budgets = await this.getQueryBudget()
@@ -64,7 +73,12 @@ export class BudgetService {
             .andWhere("budget.start_date = :val", { val: searchDate })
             .getMany();
         // if (budgets.length == 0) throw new NotFoundException(DataErrorID.FilterNotFound)
-        return budgets
+        let processed: ProcessedBudget[] = [];
+        for (const budget of budgets) {
+            let temp = await this.convertIntoProcessed(budget)
+            processed.push(temp)
+        }
+        return processed
     }
 
     async getOneById(id: number): Promise<Budget> {
@@ -77,6 +91,27 @@ export class BudgetService {
             .andWhere("budget.start_date = :sd", { sd: date })
             .getOne();
         return budget
+    }
+
+    async convertIntoProcessed(budget: Budget): Promise<ProcessedBudget> {
+        let percentageUsed: number = 0;
+        let amountUsed: number = 0;
+        let processed: ProcessedBudget;
+        let amountRemaining: number = 0;
+        const transactions = await this.expenseService.getExpenseTransactionsByCategory(budget.category.id, budget.start_date);
+        transactions.map((trans) => {
+            amountUsed += Number(trans.amount);
+        })
+        if (transactions.length == 0) {
+            amountRemaining = budget.amount
+            processed = { ...budget, percentageUsed, amountUsed, amountRemaining };
+            return processed
+        }
+
+        percentageUsed = (amountUsed / budget.amount) * 100;
+        amountRemaining = budget.amount - amountUsed;
+        processed = { ...budget, percentageUsed, amountUsed, amountRemaining };
+        return processed;
     }
 
     async addBudget(createDto: CreateBudgetDto, user: User, ip: string): Promise<Object> {
@@ -180,11 +215,21 @@ export class BudgetService {
         }
     }
 
-    async getPercentageBudgetUsed(budgetId: number) {
-        const budget = await this.budgetRepo.findOne({ where: { id: budgetId } });
+    async getMonthlyRecap(dto: BudgetFilterDto, user: User) {
 
+        const budgets = await this.findAllUserBudgetFilter(user.id, dto)
+        let totalUsed: number = 0;
+        let totalRemaining: number = 0;
+        let totalBudget: number = 0;
+        budgets.map((budget) => {
+            totalUsed += Number(budget.amountUsed);
+            totalRemaining += Number(budget.amountRemaining);
+            totalBudget += Number(budget.amount);
+        });
+        let percentageUsed = (totalUsed / totalBudget) * 100;
+        let borderBudget = totalBudget * 0.2; //border budget 80% from budget
+        return {
+            borderBudget, percentageUsed, totalBudget, totalRemaining, totalUsed
+        }
     }
-
-    // !CREATE TRANSACTION SERVICE FIRST
-    convertToProcessedBudget(data: Budget) { }
 }

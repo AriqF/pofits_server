@@ -22,6 +22,12 @@ export class BudgetController {
     return this.budgetService.findAllUserBudget(user.id)
   }
 
+  @Get("/me/month-recap")
+  @UseGuards(JwtAuthGuard)
+  getBudgetMonthRecap(@GetUser() user: User, @Query() dto: BudgetFilterDto) {
+    return this.budgetService.getMonthlyRecap(dto, user)
+  }
+
   @Get("dev/:id")
   @UseGuards(JwtAuthGuard)
   devGetBudgetById(@GetUser() user: User, @Param("id") id: number) {
