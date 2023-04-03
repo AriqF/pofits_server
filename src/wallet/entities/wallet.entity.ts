@@ -20,6 +20,9 @@ export class Wallet {
     @Column({ type: "enum", default: WalletCategory.Bank, enum: WalletCategory })
     category: WalletCategory;
 
+    @Column({ length: 50, nullable: false, default: "Rekening Bank" })
+    icon: string;
+
     @CreateDateColumn()
     created_at: Date;
 
