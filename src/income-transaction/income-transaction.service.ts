@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, InternalServerErrorException, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BudgetService } from 'src/budget/budget.service';
 import { IncomeCategory } from 'src/income-category/entities/income-category.entity';
@@ -16,6 +16,7 @@ import { WeblogService } from 'src/weblog/weblog.service';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { AddIncTransactionDto } from './dto/add-inc-transaction.dto';
 import { IncomeTransaction } from './entities/income-transaction.entity';
+import { IncomeTransFilterDto } from './dto/filter.dto';
 
 const thisModule = "Transactions";
 
@@ -25,7 +26,8 @@ export class IncomeTransactionService {
         @InjectRepository(IncomeTransaction)
         private incomeRepo: Repository<IncomeTransaction>,
         private logService: WeblogService,
-        private incEstimationService: IncomeEstimationService,
+        @Inject(forwardRef(() => IncomeEstimationService))
+        private readonly incEstimationService: IncomeEstimationService,
         private walletService: WalletService,
     ) { }
 
@@ -38,7 +40,7 @@ export class IncomeTransactionService {
                 "inc.id", "inc.amount", "inc.category", "inc.date", "inc.title",
                 "inc.description", "inc.created_at", "inc.updated_at", "inc.deleted_at",
                 "cat.id", "cat.title", "wal.id", "wal.name", "wal.amount", "cr.id", "cr.email",
-                "cr.username",
+                "cr.username", "cat.id", "cat.title", "cat.icon"
             ])
         return query;
     }
@@ -48,12 +50,12 @@ export class IncomeTransactionService {
             .where("cr.id = :uid", { uid: user.id })
             .orderBy("inc.date", "ASC")
             .getMany()
-        if (data.length == 0) throw new NotFoundException(DataErrorID.NotFound)
+        // if (data.length == 0) throw new NotFoundException(DataErrorID.NotFound)
         return data;
     }
 
-    async getAllIncTransactionsByFilter(user: User, dto: TransactionsFilterDto) {
-        let { search, date, page, take, orderby } = dto;
+    async getAllIncTransactionsByFilter(user: User, dto: IncomeTransFilterDto) {
+        let { search, date, page, take, orderby, category } = dto;
         if (!page) page = 1
 
         if (!orderby) orderby = "ASC"
@@ -61,12 +63,15 @@ export class IncomeTransactionService {
         if (search) data.where("exp.title LIKE :src", { src: `%${search}%` })
 
         if (date) data.andWhere("exp.date = :dt", { dt: date })
+
+        if (category) data.andWhere("cat.id = :cid", { cid: category })
+
         data.andWhere("cr.id = :uid", { uid: user.id });
 
         if (take) data.take(take).skip(take * (page - 1))
 
         const dataRes = await data.orderBy("exp.date", orderby).getMany();
-        if (dataRes.length == 0) throw new NotFoundException(DataErrorID.FilterNotFound)
+        // if (dataRes.length == 0) throw new NotFoundException(DataErrorID.FilterNotFound)
         return dataRes
     }
 
@@ -79,9 +84,10 @@ export class IncomeTransactionService {
         return data;
     }
 
-    async getIncomeTransactionsByCategory(categoryId: IncomeCategory, date: Date): Promise<IncomeTransaction[]> {
+    async getIncomeTransactionsByCategory(categoryId: IncomeCategory | number, date: Date, user: User): Promise<IncomeTransaction[]> {
         const transactions = await this.getQueryIncomeTrans()
             .where("cat.id = :cid", { cid: categoryId })
+            .andWhere("cr.id = :uid", { uid: user.id })
             .andWhere("inc.date >= :sd", { sd: getDateStartMonth(date) })
             .andWhere("inc.date <= :ed", { ed: getDateEndMonth(date) })
             .getMany();
@@ -97,20 +103,22 @@ export class IncomeTransactionService {
         let hasEstimation: boolean = false;
         const currMonth: Date = getDateStartMonth(dto.date)
         let accAmount: number = 0;
-        let percentage: number
+        let percentage: number = 0;
         try {
+            newData = await this.incomeRepo.save(newData);
             const estimation = await this.incEstimationService.getMonthEstimationByCategory(dto.category, currMonth);
-            const pastTrans = await this.getIncomeTransactionsByCategory(dto.category, currMonth)
+            const pastTrans = await this.getIncomeTransactionsByCategory(dto.category, dto.date, user)
             if (pastTrans.length != 0) {
                 accAmount = getAccumulatedTransactions(pastTrans)
+                if (estimation) {
+                    percentage = (accAmount / estimation.amount) * 100;
+                }
             }
             if (estimation) {
                 hasEstimation = true;
-                percentage = getIncomeDiffPercentage(estimation, accAmount)
             }
             if (dto.wallet) await this.walletService.addWalletAmount(dto.wallet, dto.amount)
 
-            newData = await this.incomeRepo.save(newData);
             return { message: DataSuccessID.DataAdded, hasEstimation, hasFulfilled, percentage }
         } catch (error) {
             throw new InternalServerErrorException(error)

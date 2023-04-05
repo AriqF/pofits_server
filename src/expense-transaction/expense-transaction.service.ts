@@ -85,9 +85,10 @@ export class ExpenseTransactionService {
 
 
 
-    async getExpenseTransactionsByCategory(categoryId: ExpenseCategory | number, date: Date): Promise<ExpenseTransaction[]> {
+    async getExpenseTransactionsByCategory(categoryId: ExpenseCategory | number, date: Date, user: User): Promise<ExpenseTransaction[]> {
         const transactions = await this.getQueryExpenseTrans()
             .where("cat.id = :cid", { cid: categoryId })
+            .andWhere("cr.id = :uid", { uid: user.id })
             .andWhere("exp.date >= :sd", { sd: getDateStartMonth(date) })
             .andWhere("exp.date <= :ed", { ed: getDateEndMonth(date) })
             .getMany();
@@ -113,7 +114,7 @@ export class ExpenseTransactionService {
             //find budget
             const budget = await this.budgetService.getMonthlyBudgetByCategory(dto.category, currMonth);
             //get past transactions
-            const pastTrans = await this.getExpenseTransactionsByCategory(dto.category, dto.date);
+            const pastTrans = await this.getExpenseTransactionsByCategory(dto.category, dto.date, user);
             if (pastTrans.length != 0) {
                 accAmount = getAccumulatedTransactions(pastTrans)
                 if (budget) {

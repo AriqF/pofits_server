@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Inject, Injectable, InternalServerErrorException, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
 import { BudgetFilterDto } from 'src/budget/dto/filter-budget.dto';
@@ -6,13 +6,16 @@ import { IncomeCategory } from 'src/income-category/entities/income-category.ent
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
 import { DataSuccessID } from 'src/utils/global/enum/success-message.enum';
-import { convertStartEndDateFmt, getListMonthDifferenece, getStartEndDateFmt, validateMoreThanDate } from 'src/utils/helper';
+import { convertStartEndDateFmt, getDateEndMonth, getDateStartMonth, getListMonthDifferenece, getStartEndDateFmt, validateMoreThanDate } from 'src/utils/helper';
 import { LogType } from 'src/weblog/interfaces/log-type.enum';
 import { WeblogService } from 'src/weblog/weblog.service';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { CreateEstimationDto } from './dto/create-income-estimation.dto';
 import { UpdateIncomeEstimationDto } from './dto/update-income-estimation.dto';
 import { IncomeEstimation } from './entities/income-estimation.entity';
+import { ProcessedEstimation } from './entities/estimation-type';
+import { IncomeTransactionService } from 'src/income-transaction/income-transaction.service';
+import { IncomeTransaction } from 'src/income-transaction/entities/income-transaction.entity';
 
 const thisModule = "Income Estimation"
 
@@ -23,6 +26,8 @@ export class IncomeEstimationService {
     @InjectRepository(IncomeEstimation)
     private estimationRepo: Repository<IncomeEstimation>,
     private readonly logService: WeblogService,
+    @Inject(forwardRef(() => IncomeTransactionService))
+    private readonly incomeService: IncomeTransactionService
   ) { }
 
   getQueryEstimation(): SelectQueryBuilder<IncomeEstimation> {
@@ -32,7 +37,7 @@ export class IncomeEstimationService {
       .select([
         "est.id", "est.amount", "est.isRepeat", "est.start_date", "est.end_date",
         "est.created_at", "est.updated_at", "est.deleted_at",
-        "cr.id", "cr.email", "cr.username", "cat.id", "cat.title",
+        "cr.id", "cr.email", "cr.username", "cat.id", "cat.title", "cat.icon"
       ])
     return query
   }
@@ -41,29 +46,38 @@ export class IncomeEstimationService {
     const data = await this.getQueryEstimation()
       .where("cr.id = :uid", { uid: user.id })
       .getMany();
-    if (data.length == 0) throw new NotFoundException(DataErrorID.NotFound);
-    return data;
+    let processed: ProcessedEstimation[] = [];
+    for (const target of data) {
+      let temp = await this.convertIntoProcessed(target);
+      processed.push(temp);
+    }
+    return processed;
   }
 
-  async findAllEstimationByFilter(user: User, filter: BudgetFilterDto): Promise<IncomeEstimation[]> {
+  async findAllEstimationByFilter(user: User, filter: BudgetFilterDto): Promise<ProcessedEstimation[]> {
     let { month } = filter;
     let searchDate = new Date(moment(month).startOf("month").format("YYYY-MM-DD"))
     const data = await this.getQueryEstimation()
       .where("cr.id = :uid", { uid: user.id })
       .andWhere("est.start_date = :val", { val: searchDate })
       .getMany();
-    if (data.length == 0) throw new NotFoundException(DataErrorID.FilterNotFound)
-    return data
+    let processed: ProcessedEstimation[] = [];
+    for (const target of data) {
+      let temp = await this.convertIntoProcessed(target);
+      processed.push(temp);
+    }
+    return processed
   }
 
-  async findOneById(id: number, user: User): Promise<IncomeEstimation> {
+  async findOneById(id: number, user: User): Promise<ProcessedEstimation> {
     const data = await this.getQueryEstimation()
       .where("est.id = :eid", { eid: id })
       .andWhere("cr.id = :uid", { uid: user.id })
       .getOne();
     if (!data) throw new NotFoundException(DataErrorID.NotFound)
     if (data.created_by.id != user.id) throw new ForbiddenException(DataErrorID.Forbidden)
-    return data
+    const processed = await this.convertIntoProcessed(data);
+    return processed
   }
 
   async getOneById(id: number): Promise<IncomeEstimation> {
@@ -178,5 +192,53 @@ export class IncomeEstimationService {
       throw new InternalServerErrorException(error)
     }
   }
-  // !TEST THE API
+
+  async convertIntoProcessed(data: IncomeEstimation): Promise<ProcessedEstimation> {
+    let percentageAchieved: number = 0;
+    let amountAchieved: number = 0;
+    let processed: ProcessedEstimation;
+    let amountUnachieved: number = 0;
+    let isAchieved = false;
+
+    const transactions = await this.incomeService.getIncomeTransactionsByCategory(data.category.id, data.start_date, data.created_by)
+    transactions.map((trans) => {
+      amountAchieved += Number(trans.amount)
+    });
+    if (transactions.length == 0) {
+      amountUnachieved = data.amount;
+      processed = { ...data, percentageAchieved, amountAchieved, amountUnachieved, isAchieved }
+      return processed;
+    }
+
+    percentageAchieved = (amountAchieved / data.amount) * 100;
+    if (amountAchieved < data.amount) {
+      amountUnachieved = data.amount - amountAchieved;
+    } else if (amountAchieved >= data.amount) {
+      isAchieved = true;
+    }
+    processed = { ...data, percentageAchieved, amountAchieved, amountUnachieved, isAchieved }
+    return processed;
+  }
+
+  async getMonthlyRecap(dto: BudgetFilterDto, user: User) {
+    let targets = await this.findAllEstimationByFilter(user, dto);
+
+    let totalTarget: number = 0;
+    let totalUnachieved: number = 0;
+    let totalAchieved: number = 0;
+    let percentageAchieved: number = 0;
+
+    targets.map((data, index) => {
+      totalTarget += Number(data.amount);
+      totalAchieved += Number(data.amountAchieved);
+      totalUnachieved += Number(data.amountUnachieved);
+    })
+    if (targets.length != 0) {
+      percentageAchieved = (totalAchieved / totalTarget) * 100;
+    }
+    return {
+      totalAchieved, totalTarget, totalUnachieved, percentageAchieved
+    }
+  }
+
 }

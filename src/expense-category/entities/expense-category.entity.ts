@@ -9,7 +9,7 @@ export class ExpenseCategory {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ length: 75 })
+    @Column({ length: 35 })
     title: string;
 
     @Column({ nullable: true })

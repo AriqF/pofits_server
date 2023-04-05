@@ -8,7 +8,7 @@ export class IncomeCategory {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ length: 75 })
+    @Column({ length: 35 })
     title: string;
 
     @Column({ length: 255, nullable: true })

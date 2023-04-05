@@ -6,7 +6,7 @@ export class CreateIncCatDto {
 
     @IsNotEmpty()
     @IsString()
-    @MaxLength(75)
+    @MaxLength(35)
     title: string;
 
     @IsOptional()

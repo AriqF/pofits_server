@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { IncomeTransactionService } from './income-transaction.service';
 import { IncomeTransactionController } from './income-transaction.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -13,7 +13,7 @@ import { WalletModule } from 'src/wallet/wallet.module';
       IncomeTransaction
     ]),
     WeblogModule,
-    IncomeEstimationModule,
+    forwardRef(() => IncomeEstimationModule),
     WalletModule,
   ],
   controllers: [IncomeTransactionController],

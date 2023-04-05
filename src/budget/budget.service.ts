@@ -98,7 +98,7 @@ export class BudgetService {
         let amountUsed: number = 0;
         let processed: ProcessedBudget;
         let amountRemaining: number = 0;
-        const transactions = await this.expenseService.getExpenseTransactionsByCategory(budget.category.id, budget.start_date);
+        const transactions = await this.expenseService.getExpenseTransactionsByCategory(budget.category.id, budget.start_date, budget.created_by);
         transactions.map((trans) => {
             amountUsed += Number(trans.amount);
         })

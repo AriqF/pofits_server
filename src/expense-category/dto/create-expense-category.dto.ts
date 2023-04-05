@@ -5,7 +5,7 @@ import { IsNotEmpty, IsString, MaxLength, IsOptional, MinLength } from "class-va
 export class CreateExpenseCatDto {
     @IsNotEmpty()
     @IsString()
-    @MaxLength(75)
+    @MaxLength(35)
     @MinLength(2)
     title: string;
 
