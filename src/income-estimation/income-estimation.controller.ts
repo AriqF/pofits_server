@@ -21,6 +21,12 @@ export class IncomeEstimationController {
     return this.estimationService.findAllUserEstimation(user)
   }
 
+  @Get("/me/month-recap")
+  @UseGuards(JwtAuthGuard)
+  getTargetMonthRecap(@GetUser() user: User, @Query() dto: BudgetFilterDto) {
+    return this.estimationService.getMonthlyRecap(dto, user);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: number, @GetUser() user: User) {

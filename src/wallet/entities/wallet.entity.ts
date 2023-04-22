@@ -11,7 +11,7 @@ export class Wallet {
     @Column({ nullable: false, length: 20 })
     name: string;
 
-    @Column({ length: 255, nullable: true })
+    @Column({ length: 100, nullable: true })
     description: string;
 
     @Column({ type: "bigint" })
@@ -19,6 +19,9 @@ export class Wallet {
 
     @Column({ type: "enum", default: WalletCategory.Bank, enum: WalletCategory })
     category: WalletCategory;
+
+    @Column({ nullable: false, default: "Rekening Bank" })
+    icon: string;
 
     @CreateDateColumn()
     created_at: Date;

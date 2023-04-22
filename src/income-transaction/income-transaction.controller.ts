@@ -7,6 +7,8 @@ import { TransactionsFilterDto } from 'src/transaction/dto/transactions-filter.d
 import { User } from 'src/user/entities/user.entity';
 import { AddIncTransactionDto } from './dto/add-inc-transaction.dto';
 import { IncomeTransactionService } from './income-transaction.service';
+import { IncomeTransFilterDto } from './dto/filter.dto';
+import { IncomeMonthlyFilterDto } from './dto/monthly-trans-filter.dto';
 
 @Controller('transaction/income')
 export class IncomeTransactionController {
@@ -14,14 +16,20 @@ export class IncomeTransactionController {
 
   @Get("all")
   @UseGuards(JwtAuthGuard)
-  getAllIncomeTransactions(@GetUser() user: User, @Query() filter: TransactionsFilterDto) {
+  getAllIncomeTransactions(@GetUser() user: User, @Query() filter: IncomeTransFilterDto) {
     if (Object.keys(filter).length) {
       return this.incomeService.getAllIncTransactionsByFilter(user, filter)
     }
     return this.incomeService.getAllUserIncomeTransactions(user)
   }
 
-  @Get(":id")
+  @Get("monthly")
+  @UseGuards(JwtAuthGuard)
+  getAllMonthlyIncome(@GetUser() user: User, @Query() filter: IncomeMonthlyFilterDto) {
+    return this.incomeService.getIncomeTransactionsByCategory(filter.category, filter.date, user)
+  }
+
+  @Get("detail/:id")
   @UseGuards(JwtAuthGuard)
   getIncomeById(@Param("id") id: number, @GetUser() user: User) {
     return this.incomeService.getIncomeTransactionsById(id, user)

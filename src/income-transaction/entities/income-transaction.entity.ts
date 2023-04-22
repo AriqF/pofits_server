@@ -12,7 +12,7 @@ export class IncomeTransaction {
     @Column({ type: "bigint" })
     amount: number;
 
-    @ManyToOne(() => IncomeCategory, category => category.id, { eager: true })
+    @ManyToOne(() => IncomeCategory, category => category.id, { eager: true, onDelete: "CASCADE" })
     @JoinColumn({ name: "category" })
     category: IncomeCategory;
 

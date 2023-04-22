@@ -28,7 +28,7 @@ export class IncomeCategoryService {
         const query = this.incatRepo.createQueryBuilder('inc')
             .leftJoin('inc.created_by', 'cr')
             .select([
-                'inc.id', 'inc.title', 'inc.description', 'inc.income_type',
+                'inc.id', 'inc.title', 'inc.description', 'inc.income_type', "inc.icon",
                 'inc.isGlobal', 'inc.created_at', 'inc.updated_at', 'inc.deleted_at',
                 'cr.id', 'cr.username', 'cr.email'
             ])

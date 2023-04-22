@@ -7,6 +7,5 @@ export class BudgetFilterDto {
     @Type(() => Date)
     @IsDate()
     @IsOptional()
-    month: Date;
-
+    month?: Date;
 }

@@ -4,16 +4,30 @@ import { RealIp } from 'nestjs-real-ip';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { User } from 'src/user/entities/user.entity';
-import { AddExpTransactionDto } from '../expense-transaction/dto/add-exp-transaction.dto';
-import { AddIncTransactionDto } from '../income-transaction/dto/add-inc-transaction.dto';
-import { EditTransactionsDto } from './dto/edit/edit-transactions.dto';
-import { TransactionsFilterDto } from './dto/transactions-filter.dto';
-import { TransactionType } from './interfaces/transactions.type';
+
 import { TransactionService } from './transaction.service';
+import { TransactionsRecapDto } from './dto/recap-filter.dto';
+import { TransactionsFilterDto } from './dto/transactions-filter.dto';
+import { AllTransactionsFilterDto } from './dto/all-transactions-filter.dto';
 
 @Controller('transactions')
 export class TransactionController {
   constructor(private readonly transactionService: TransactionService) { }
 
+
+  @Get("me")
+  @UseGuards(JwtAuthGuard)
+  getAllUserTransactions(@GetUser() user: User, @Query() filter: AllTransactionsFilterDto) {
+    if (Object.keys(filter).length) {
+      return this.transactionService.getAllFilterUserTransactions(user, filter);
+    }
+    return this.transactionService.getAllUserTransactions(user)
+  }
+
+  @Get("me/month-recap")
+  @UseGuards(JwtAuthGuard)
+  getMonthRecap(@GetUser() user: User, @Query() dto: TransactionsRecapDto) {
+    return this.transactionService.getTransactionsRecap(user, dto);
+  }
 
 }

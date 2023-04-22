@@ -1,7 +1,7 @@
 import { Budget } from "src/budget/entities/budget.entity";
 import { IncomeEstimation } from "src/income-estimation/entities/income-estimation.entity";
 import { IncomeTransaction } from "src/income-transaction/entities/income-transaction.entity";
-import { ExpenseTransaction } from "../entities/expense-transaction.entity";
+import { ExpenseTransaction } from "../../expense-transaction/entities/expense-transaction.entity";
 
 export function getAccumulatedTransactions(transactions: ExpenseTransaction[] | IncomeTransaction[]): number {
     let total: number = 0;

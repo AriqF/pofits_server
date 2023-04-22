@@ -3,35 +3,42 @@ import { CreateExpenseCatDto } from "../dto/create-expense-category.dto";
 export const generalExpenseCategories: CreateExpenseCatDto[] = [
     {
         title: "Makanan",
-    },
-    {
-        title: "Asuransi",
-    },
-    {
-        title: "Belanja"
-    },
-    {
-        title: "Transportasi",
-    },
-    {
-        title: "Hiburan",
-    },
-    {
-        title: "Investasi"
-    },
-    {
-        title: "Tagihan"
-    },
-    {
-        title: "Donasi",
+        icon: "food",
     },
     {
         title: "Kesehatan",
+        icon: "life-insurance",
     },
     {
-        title: "Kecantikan"
+        title: "Belanja",
+        icon: "shopping-bag",
     },
     {
-        title: "Peliharaan"
+        title: "Transportasi",
+        icon: "bus",
+    },
+    {
+        title: "Hiburan",
+        icon: "amusement",
+    },
+    {
+        title: "Investasi",
+        icon: "gold",
+    },
+    {
+        title: "Tagihan",
+        icon: "tv",
+    },
+    {
+        title: "Donasi",
+        icon: "savings",
+    },
+    {
+        title: "Kecantikan",
+        icon: "fashion",
+    },
+    {
+        title: "Peliharaan",
+        icon: "cat"
     },
 ]

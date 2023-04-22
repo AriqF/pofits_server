@@ -30,7 +30,7 @@ export class ExpenseCategoryService {
             .leftJoin('exp.created_by', 'cr')
             .select([
                 'exp.id', 'exp.title', 'exp.description', 'exp.isGlobal', 'exp.created_at', 'exp.updated_at',
-                'exp.deleted_at', 'cr.id', 'cr.email', 'cr.username'
+                'exp.deleted_at', 'cr.id', 'cr.email', 'cr.username', "exp.icon"
             ])
         return query
     }

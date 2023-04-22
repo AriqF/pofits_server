@@ -12,7 +12,7 @@ export class ExpenseTransaction {
     @Column({ type: "bigint" })
     amount: number;
 
-    @ManyToOne(() => ExpenseCategory, category => category.id, { eager: true })
+    @ManyToOne(() => ExpenseCategory, category => category.id, { eager: true, onDelete: "CASCADE" })
     @JoinColumn({ name: "category" })
     category: ExpenseCategory;
 
@@ -25,11 +25,11 @@ export class ExpenseTransaction {
     @Column({ length: 255, nullable: true })
     description: string;
 
-    @ManyToOne(() => Wallet, wallet => wallet.id, { eager: true })
+    @ManyToOne(() => Wallet, wallet => wallet.id, { eager: true, onDelete: "CASCADE" })
     @JoinColumn({ name: "wallet" })
     wallet: Wallet;
 
-    @ManyToOne(() => User, user => user.id, { eager: true })
+    @ManyToOne(() => User, user => user.id, { eager: true, onDelete: "CASCADE" })
     @JoinColumn({ name: "created_by" })
     created_by: User;
 

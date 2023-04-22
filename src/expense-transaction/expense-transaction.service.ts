@@ -1,10 +1,10 @@
-import { ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, forwardRef, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BudgetService } from 'src/budget/budget.service';
 import { ExpenseCategory } from 'src/expense-category/entities/expense-category.entity';
 import { EditTransactionsDto } from 'src/transaction/dto/edit/edit-transactions.dto';
 import { TransactionsFilterDto } from 'src/transaction/dto/transactions-filter.dto';
-import { ExpenseTransaction } from 'src/transaction/entities/expense-transaction.entity';
+import { ExpenseTransaction } from 'src/expense-transaction/entities/expense-transaction.entity';
 import { getAccumulatedTransactions, getExpenseDiffPercentage } from 'src/transaction/helper';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
@@ -15,6 +15,7 @@ import { LogType } from 'src/weblog/interfaces/log-type.enum';
 import { WeblogService } from 'src/weblog/weblog.service';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { AddExpTransactionDto } from './dto/add-exp-transaction.dto';
+import * as moment from "moment"
 
 const thisModule = "Transactions"
 
@@ -24,8 +25,9 @@ export class ExpenseTransactionService {
         @InjectRepository(ExpenseTransaction)
         private expenseRepo: Repository<ExpenseTransaction>,
         private logService: WeblogService,
-        private budgetService: BudgetService,
         private walletService: WalletService,
+        @Inject(forwardRef(() => BudgetService))
+        private readonly budgetService: BudgetService,
     ) { }
 
     getQueryExpenseTrans(): SelectQueryBuilder<ExpenseTransaction> {
@@ -36,7 +38,7 @@ export class ExpenseTransactionService {
             .select([
                 "exp.id", "exp.amount", "exp.category", "exp.date", "exp.title",
                 "exp.description", "exp.created_at", "exp.updated_at", "exp.deleted_at",
-                "cat.id", "cat.title", "wal.id", "wal.name", "wal.amount", "cr.id", "cr.email",
+                "cat.id", "cat.title", "cat.icon", "wal.id", "wal.name", "wal.amount", "wal.icon", "cr.id", "cr.email",
                 "cr.username",
             ])
         return query;
@@ -45,7 +47,7 @@ export class ExpenseTransactionService {
     async getAllUserExpenseTransactions(user: User): Promise<ExpenseTransaction[]> {
         const data = await this.getQueryExpenseTrans()
             .where("cr.id = :uid", { uid: user.id })
-            .orderBy("exp.date", "ASC")
+            .orderBy("exp.date", "DESC")
             .getMany()
         if (data.length == 0) throw new NotFoundException(DataErrorID.NotFound)
         return data;
@@ -54,20 +56,25 @@ export class ExpenseTransactionService {
 
 
     async getAllExpTransactionsByFilter(user: User, dto: TransactionsFilterDto) {
-        let { search, date, page, take, orderby } = dto;
+        let { search, start_date, end_date, page, take, orderby } = dto;
         if (!page) page = 1
-
+        if (!end_date) {
+            end_date = start_date
+        }
         if (!orderby) orderby = "ASC"
         let data = this.getQueryExpenseTrans()
         if (search) data.where("exp.title LIKE :src", { src: `%${search}%` })
+        if (start_date && end_date) {
+            data.andWhere("exp.date >= :dt", { dt: moment(start_date).format("YYYY-MM-DD") })
+            data.andWhere("exp.date <= :et", { et: moment(end_date).format("YYYY-MM-DD") })
+        }
 
-        if (date) data.andWhere("exp.date = :dt", { dt: date })
         data.andWhere("cr.id = :uid", { uid: user.id });
 
         if (take) data.take(take).skip(take * (page - 1))
 
         const dataRes = await data.orderBy("exp.date", orderby).getMany();
-        if (dataRes.length == 0) throw new NotFoundException(DataErrorID.FilterNotFound)
+        // if (dataRes.length == 0) throw new NotFoundException(DataErrorID.FilterNotFound)
         return dataRes
     }
 
@@ -84,9 +91,10 @@ export class ExpenseTransactionService {
 
 
 
-    async getExpenseTransactionsByCategory(categoryId: ExpenseCategory, date: Date): Promise<ExpenseTransaction[]> {
+    async getExpenseTransactionsByCategory(categoryId: ExpenseCategory | number, date: Date, user: User): Promise<ExpenseTransaction[]> {
         const transactions = await this.getQueryExpenseTrans()
             .where("cat.id = :cid", { cid: categoryId })
+            .andWhere("cr.id = :uid", { uid: user.id })
             .andWhere("exp.date >= :sd", { sd: getDateStartMonth(date) })
             .andWhere("exp.date <= :ed", { ed: getDateEndMonth(date) })
             .getMany();
@@ -96,6 +104,9 @@ export class ExpenseTransactionService {
 
 
     async addExpenseTransactions(user: User, dto: AddExpTransactionDto, ip: string) {
+        const queryRunner = this.expenseRepo.queryRunner;
+        await queryRunner.connect()
+        await queryRunner.startTransaction()
         let newData = this.expenseRepo.create({
             ...dto,
             created_by: user,
@@ -103,33 +114,36 @@ export class ExpenseTransactionService {
         let hasBudget: boolean = false
         let budgetAlmostLimit: boolean = false
         let budgetOverLimit: boolean = false
-        let percentage: number | null
+        let percentage: number = 0
         let accAmount: number = 0;
 
         try {
+            if (dto.wallet) await this.walletService.subsWalletAmount(dto.wallet, dto.amount)
+
+            newData = await this.expenseRepo.save(newData);
             const currMonth: Date = getDateStartMonth(dto.date)
             //find budget
             const budget = await this.budgetService.getMonthlyBudgetByCategory(dto.category, currMonth);
             //get past transactions
-            const pastTrans = await this.getExpenseTransactionsByCategory(dto.category, dto.date);
-
+            const pastTrans = await this.getExpenseTransactionsByCategory(dto.category, dto.date, user);
             if (pastTrans.length != 0) {
                 accAmount = getAccumulatedTransactions(pastTrans)
+                if (budget) {
+                    percentage = (accAmount / budget.amount) * 100
+                }
             }
 
             if (budget) {
                 hasBudget = true;
-                percentage = getExpenseDiffPercentage(budget, accAmount)
                 if (percentage > 75) budgetAlmostLimit = true;
                 if (percentage >= 100) budgetOverLimit = true;
             }
-
-            if (dto.wallet) await this.walletService.subsWalletAmount(dto.wallet, dto.amount)
-
-            newData = await this.expenseRepo.save(newData);
+            await queryRunner.startTransaction()
             return { message: DataSuccessID.DataAdded, budgetAlmostLimit, hasBudget, percentage, budgetOverLimit }
         } catch (error) {
             throw new InternalServerErrorException(error)
+        } finally {
+            await queryRunner.release()
         }
     }
 

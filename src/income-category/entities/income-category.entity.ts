@@ -8,10 +8,10 @@ export class IncomeCategory {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ length: 75 })
+    @Column({ length: 35 })
     title: string;
 
-    @Column({ length: 255, nullable: true })
+    @Column({ length: 100, nullable: true })
     description: string;
 
     @ManyToOne(() => User, user => user.id, { onDelete: "CASCADE" })
@@ -20,6 +20,9 @@ export class IncomeCategory {
 
     @Column({ enum: IncomeType, type: "enum", default: IncomeType.Active })
     income_type: IncomeType;
+
+    @Column()
+    icon: string;
 
     @Column({ type: "boolean", default: false })
     isGlobal: boolean;

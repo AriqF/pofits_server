@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable, InternalServerErrorException, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
@@ -10,6 +10,7 @@ import { CreateWalletDto } from './dto/create-wallet.dto';
 import { MoveWalletDto } from './dto/move-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { Wallet } from './entities/wallet.entity';
+import { WalletCategory } from './interfaces/wallet-category.enum';
 
 const thisModule = "Wallet"
 
@@ -18,6 +19,7 @@ export class WalletService {
     constructor(
         @InjectRepository(Wallet)
         private walletRepo: Repository<Wallet>,
+        @Inject(forwardRef(() => WeblogService))
         private readonly logService: WeblogService
     ) { }
 
@@ -25,7 +27,7 @@ export class WalletService {
         const query = this.walletRepo.createQueryBuilder('wl')
             .leftJoin('wl.created_by', 'cr')
             .select([
-                'wl.id', 'wl.name', 'wl.description', 'wl.amount', 'wl.created_at', "wl.category",
+                'wl.id', 'wl.name', 'wl.description', 'wl.amount', 'wl.created_at', "wl.category", "wl.icon",
                 'wl.updated_at', 'wl.deleted_at', 'cr.id', 'cr.email', 'cr.username',
             ])
         return query;
@@ -35,7 +37,7 @@ export class WalletService {
         const wallets = await this.getWalletQuery()
             .where('cr.id = :uid', { uid: userId })
             .getMany();
-        if (wallets.length == 0) throw new NotFoundException(DataErrorID.NotFound)
+        // if (wallets.length == 0) throw new NotFoundException(DataErrorID.NotFound)
         return wallets
     }
 
@@ -59,6 +61,7 @@ export class WalletService {
         try {
             let wallet = this.walletRepo.create({
                 ...addDto,
+                icon: this.getWalletIcon(addDto.category),
                 created_by: user
             })
             await this.walletRepo.save(wallet);
@@ -74,7 +77,7 @@ export class WalletService {
         const wallet = await this.walletRepo.findOne({ where: { id: walletId }, loadRelationIds: true, loadEagerRelations: true })
         if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
         try {
-            await this.walletRepo.update(walletId, { ...updDto })
+            await this.walletRepo.update(walletId, { ...updDto, icon: this.getWalletIcon(updDto.category) })
             await this.logService.addLog("Updated a wallet", thisModule, LogType.Info, ip, user.id);
             return { message: DataSuccessID.DataUpdated }
         } catch (error) {
@@ -165,6 +168,29 @@ export class WalletService {
             .getOne()
         if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
         return await this.walletRepo.update(walletId, { amount: amount })
+    }
+
+    getWalletIcon(category: string): string {
+        switch (category) {
+            case "Rekening Bank":
+                return "bank";
+            case "E-Money":
+                return "mobile";
+            case "Tunai":
+                return "fees";
+            default:
+                return "bank";
+        }
+    }
+
+    async generateGeneralWallet(user: User) {
+        await this.walletRepo.insert({
+            name: "Tunai",
+            amount: 0,
+            category: WalletCategory.Cash,
+            icon: "fees",
+            created_by: user
+        })
     }
 
 }

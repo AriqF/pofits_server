@@ -9,14 +9,17 @@ export class ExpenseCategory {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ length: 75 })
+    @Column({ length: 35 })
     title: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, length: 100 })
     description: string;
 
     @Column({ type: "boolean", default: false })
     isGlobal: boolean;
+
+    @Column()
+    icon: string;
 
     @ManyToOne(() => User, user => user.id, { onDelete: "CASCADE" })
     @JoinColumn({ name: "created_by" })
