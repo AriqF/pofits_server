@@ -28,6 +28,12 @@ export class BudgetController {
     return this.budgetService.getMonthlyRecap(dto, user)
   }
 
+  @Get("/me/month-allocation")
+  @UseGuards(JwtAuthGuard)
+  getBudgetMonthAllocation(@GetUser() user: User, @Query() dto: BudgetFilterDto) {
+    return this.budgetService.getMonthBudgetAllocation(dto, user)
+  }
+
   @Get("dev/:id")
   @UseGuards(JwtAuthGuard)
   devGetBudgetById(@GetUser() user: User, @Param("id") id: number) {

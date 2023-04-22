@@ -232,4 +232,32 @@ export class BudgetService {
             borderBudget, percentageUsed, totalBudget, totalRemaining, totalUsed
         }
     }
+
+    async getMonthBudgetAllocation(dto: BudgetFilterDto, user: User) {
+        let searchDate = new Date(moment(dto.month).startOf("month").format("YYYY-MM-DD"))
+        const budgets = await this.getQueryBudget()
+            .where("cr.id = :uid", { uid: user.id })
+            .andWhere("budget.start_date = :val", { val: searchDate })
+            .distinct(true)
+            .distinctOn(["cat.id"])
+            .getMany();
+
+        let totalBudget = 0
+        budgets.map((budget) => {
+            totalBudget += Number(budget.amount);
+        })
+
+        let resObj: Object[] = [];
+        for (const budget of budgets) {
+            let percentage = (budget.amount / totalBudget) * 100
+            let temp = {
+                categoryId: budget.category.id,
+                category: budget.category.title,
+                amount: budget.amount,
+                percentage: parseFloat(percentage.toFixed(2)),
+            }
+            resObj.push(temp);
+        }
+        return resObj
+    }
 }
