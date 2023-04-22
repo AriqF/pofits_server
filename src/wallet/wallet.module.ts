@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { WalletController } from './wallet.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,7 +10,7 @@ import { WeblogModule } from 'src/weblog/weblog.module';
     TypeOrmModule.forFeature([
       Wallet,
     ]),
-    WeblogModule,
+    forwardRef(() => WeblogModule),
   ],
   providers: [WalletService],
   controllers: [WalletController],

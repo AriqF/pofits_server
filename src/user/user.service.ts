@@ -17,6 +17,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { DataErrorID, UserErrorID } from 'src/utils/global/enum/error-message.enum';
 import { ExpenseCategoryService } from 'src/expense-category/expense-category.service';
 import { IncomeCategoryService } from 'src/income-category/income-category.service';
+import { WalletService } from 'src/wallet/wallet.service';
 
 const thisModule = "User"
 
@@ -31,6 +32,8 @@ export class UserService {
     private readonly expCatService: ExpenseCategoryService,
     @Inject(forwardRef(() => IncomeCategoryService))
     private readonly incCatService: IncomeCategoryService,
+    @Inject(forwardRef(() => WalletService))
+    private readonly walletService: WalletService,
   ) { }
 
   async signUp(registerDto: UserRegisterDto, isAdminRegis?: boolean): Promise<User> {
@@ -45,10 +48,12 @@ export class UserService {
     })
 
     try {
-      user = await this.userRepo.save(user)
       //generate general category for income and expense
+      user = await this.userRepo.save(user)
       await this.expCatService.generateGeneralCategory(user);
-      await this.incCatService.generateGeneralCategories(user)
+      await this.incCatService.generateGeneralCategories(user);
+      // *user cant update the amount of generated wallets
+      // await this.walletService.generateGeneralWallet(user);
       delete user.password
       return user
     } catch (error) {
@@ -57,7 +62,7 @@ export class UserService {
       } else if (error.code === "ER_NO_DEFAULT_FOR_FIELD") {
         throw new BadRequestException()
       } else {
-        throw new InternalServerErrorException()
+        throw new InternalServerErrorException(error.message)
       }
     }
   }

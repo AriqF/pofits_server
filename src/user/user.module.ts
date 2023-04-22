@@ -7,6 +7,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { WeblogModule } from 'src/weblog/weblog.module';
 import { ExpenseCategoryModule } from 'src/expense-category/expense-category.module';
 import { IncomeCategoryModule } from 'src/income-category/income-category.module';
+import { WalletModule } from 'src/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { IncomeCategoryModule } from 'src/income-category/income-category.module
     forwardRef(() => WeblogModule),
     forwardRef(() => IncomeCategoryModule),
     forwardRef(() => ExpenseCategoryModule),
+    forwardRef(() => WalletModule),
   ],
   controllers: [UserController],
   providers: [UserService],

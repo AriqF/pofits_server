@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable, InternalServerErrorException, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
@@ -10,6 +10,7 @@ import { CreateWalletDto } from './dto/create-wallet.dto';
 import { MoveWalletDto } from './dto/move-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { Wallet } from './entities/wallet.entity';
+import { WalletCategory } from './interfaces/wallet-category.enum';
 
 const thisModule = "Wallet"
 
@@ -18,6 +19,7 @@ export class WalletService {
     constructor(
         @InjectRepository(Wallet)
         private walletRepo: Repository<Wallet>,
+        @Inject(forwardRef(() => WeblogService))
         private readonly logService: WeblogService
     ) { }
 
@@ -179,6 +181,16 @@ export class WalletService {
             default:
                 return "bank";
         }
+    }
+
+    async generateGeneralWallet(user: User) {
+        await this.walletRepo.insert({
+            name: "Tunai",
+            amount: 0,
+            category: WalletCategory.Cash,
+            icon: "fees",
+            created_by: user
+        })
     }
 
 }
