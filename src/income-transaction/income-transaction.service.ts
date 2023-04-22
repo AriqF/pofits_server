@@ -17,6 +17,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { AddIncTransactionDto } from './dto/add-inc-transaction.dto';
 import { IncomeTransaction } from './entities/income-transaction.entity';
 import { IncomeTransFilterDto } from './dto/filter.dto';
+import * as moment from "moment"
 
 const thisModule = "Transactions";
 
@@ -39,7 +40,7 @@ export class IncomeTransactionService {
             .select([
                 "inc.id", "inc.amount", "inc.category", "inc.date", "inc.title",
                 "inc.description", "inc.created_at", "inc.updated_at", "inc.deleted_at",
-                "cat.id", "cat.title", "wal.id", "wal.name", "wal.amount", "cr.id", "cr.email",
+                "cat.id", "cat.title", "wal.id", "wal.name", "wal.amount", "wal.icon", "cr.id", "cr.email",
                 "cr.username", "cat.id", "cat.title", "cat.icon"
             ])
         return query;
@@ -48,21 +49,27 @@ export class IncomeTransactionService {
     async getAllUserIncomeTransactions(user: User): Promise<IncomeTransaction[]> {
         const data = await this.getQueryIncomeTrans()
             .where("cr.id = :uid", { uid: user.id })
-            .orderBy("inc.date", "ASC")
+            .orderBy("inc.date", "DESC")
             .getMany()
         // if (data.length == 0) throw new NotFoundException(DataErrorID.NotFound)
         return data;
     }
 
     async getAllIncTransactionsByFilter(user: User, dto: IncomeTransFilterDto) {
-        let { search, date, page, take, orderby, category } = dto;
+        let { search, start_date, end_date, page, take, orderby, category } = dto;
         if (!page) page = 1
+        if (!end_date) {
+            end_date = start_date
+        }
 
         if (!orderby) orderby = "ASC"
         let data = this.getQueryIncomeTrans()
-        if (search) data.where("exp.title LIKE :src", { src: `%${search}%` })
+        if (search) data.where("inc.title LIKE :src", { src: `%${search}%` })
 
-        if (date) data.andWhere("exp.date = :dt", { dt: date })
+        if (start_date && end_date) {
+            data.andWhere("inc.date >= :dt", { dt: moment(start_date).format("YYYY-MM-DD") })
+            data.andWhere("inc.date <= :et", { et: moment(end_date).format("YYYY-MM-DD") })
+        }
 
         if (category) data.andWhere("cat.id = :cid", { cid: category })
 
@@ -70,7 +77,7 @@ export class IncomeTransactionService {
 
         if (take) data.take(take).skip(take * (page - 1))
 
-        const dataRes = await data.orderBy("exp.date", orderby).getMany();
+        const dataRes = await data.orderBy("inc.date", orderby).getMany();
         // if (dataRes.length == 0) throw new NotFoundException(DataErrorID.FilterNotFound)
         return dataRes
     }
