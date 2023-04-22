@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
 import { IncomeType } from "../enums/income-type.enum";
 
 
@@ -7,11 +7,12 @@ export class CreateIncCatDto {
     @IsNotEmpty()
     @IsString()
     @MaxLength(35)
+    @MinLength(2)
     title: string;
 
     @IsOptional()
     @IsString()
-    @MaxLength(225)
+    @MaxLength(100)
     description?: string;
 
     @IsNotEmpty()

@@ -11,7 +11,7 @@ export class IncomeCategory {
     @Column({ length: 35 })
     title: string;
 
-    @Column({ length: 255, nullable: true })
+    @Column({ length: 100, nullable: true })
     description: string;
 
     @ManyToOne(() => User, user => user.id, { onDelete: "CASCADE" })

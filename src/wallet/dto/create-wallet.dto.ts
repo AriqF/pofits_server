@@ -7,12 +7,12 @@ export class CreateWalletDto {
 
     @IsString()
     @IsNotEmpty()
-    @MaxLength(50)
+    @MaxLength(20)
     name: string;
 
     @IsString()
     @IsOptional()
-    @MaxLength(255)
+    @MaxLength(100)
     description: string;
 
     @IsEnum(WalletCategory)

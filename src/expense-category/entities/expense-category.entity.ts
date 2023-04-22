@@ -12,7 +12,7 @@ export class ExpenseCategory {
     @Column({ length: 35 })
     title: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, length: 100 })
     description: string;
 
     @Column({ type: "boolean", default: false })

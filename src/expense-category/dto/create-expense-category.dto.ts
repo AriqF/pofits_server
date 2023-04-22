@@ -6,12 +6,12 @@ export class CreateExpenseCatDto {
     @IsNotEmpty()
     @IsString()
     @MaxLength(35)
-    @MinLength(2)
+    @MinLength(3)
     title: string;
 
     @IsOptional()
     @IsString()
-    @MaxLength(225)
+    @MaxLength(100)
     description?: string;
 
     @IsNotEmpty()
