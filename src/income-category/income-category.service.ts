@@ -30,7 +30,7 @@ export class IncomeCategoryService {
             .select([
                 'inc.id', 'inc.title', 'inc.description', 'inc.income_type', "inc.icon",
                 'inc.isGlobal', 'inc.created_at', 'inc.updated_at', 'inc.deleted_at',
-                'cr.id', 'cr.username', 'cr.email'
+                'cr.id', "cr.firstname", "cr.lastname", 'cr.email'
             ])
         return query
     }

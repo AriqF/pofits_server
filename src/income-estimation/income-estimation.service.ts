@@ -37,7 +37,7 @@ export class IncomeEstimationService {
       .select([
         "est.id", "est.amount", "est.isRepeat", "est.start_date", "est.end_date",
         "est.created_at", "est.updated_at", "est.deleted_at",
-        "cr.id", "cr.email", "cr.username", "cat.id", "cat.title", "cat.icon"
+        "cr.id", "cr.email", "cr.firstname", "cr.lastname", "cat.id", "cat.title", "cat.icon"
       ])
     return query
   }
