@@ -36,7 +36,7 @@ export class BudgetService {
             .select([
                 "budget.id", "budget.amount", "budget.start_date", "budget.end_date",
                 "budget.isRepeat", "budget.created_at", "budget.updated_at", "budget.deleted_at",
-                "cat.id", "cat.title", "cat.icon", "cr.id", "cr.email", "cr.username",
+                "cat.id", "cat.title", "cat.icon", "cr.id", "cr.email", "cr.firstname", "cr.lastname",
             ])
         return query
     }
