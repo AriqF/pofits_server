@@ -7,8 +7,11 @@ export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ length: 50, nullable: false })
-    username: string;
+    @Column({ length: 256, nullable: false })
+    firstname: string;
+
+    @Column({ length: 128, nullable: false })
+    lastname: string;
 
     @Column({ length: 100, unique: true, nullable: false })
     @IsEmail()

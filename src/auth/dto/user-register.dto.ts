@@ -11,9 +11,15 @@ export class UserRegisterDto {
 
     @IsString()
     @IsNotEmpty()
-    @MaxLength(25)
-    @MinLength(5)
-    username: string;
+    @MaxLength(256)
+    @MinLength(2)
+    firstname: string;
+
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(128)
+    @MinLength(2)
+    lastname: string;
 
     @IsString()
     @IsNotEmpty()
