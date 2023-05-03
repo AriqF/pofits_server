@@ -28,7 +28,7 @@ export class WalletService {
             .leftJoin('wl.created_by', 'cr')
             .select([
                 'wl.id', 'wl.name', 'wl.description', 'wl.amount', 'wl.created_at', "wl.category", "wl.icon",
-                'wl.updated_at', 'wl.deleted_at', 'cr.id', 'cr.email', 'cr.username',
+                'wl.updated_at', 'wl.deleted_at', 'cr.id', 'cr.email', 'cr.firstname', 'cr.lastname'
             ])
         return query;
     }
