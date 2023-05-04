@@ -30,6 +30,12 @@ export class UserController {
     }
   }
 
+  @Get("me")
+  @UseGuards(JwtAuthGuard)
+  getMyProfile(@GetUser() user: User) {
+    return this.userService.findOne(user.id)
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ transform: true }))

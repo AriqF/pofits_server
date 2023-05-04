@@ -9,6 +9,7 @@ import { AddIncTransactionDto } from './dto/add-inc-transaction.dto';
 import { IncomeTransactionService } from './income-transaction.service';
 import { IncomeTransFilterDto } from './dto/filter.dto';
 import { IncomeMonthlyFilterDto } from './dto/monthly-trans-filter.dto';
+import { TransactionsRecapDto } from 'src/transaction/dto/recap-filter.dto';
 
 @Controller('transaction/income')
 export class IncomeTransactionController {
@@ -27,6 +28,12 @@ export class IncomeTransactionController {
   @UseGuards(JwtAuthGuard)
   getAllMonthlyIncome(@GetUser() user: User, @Query() filter: IncomeMonthlyFilterDto) {
     return this.incomeService.getIncomeTransactionsByCategory(filter.category, filter.date, user)
+  }
+
+  @Get("month-spent-categories")
+  @UseGuards(JwtAuthGuard)
+  getMonthlyCategoriesSpent(@GetUser() user: User, @Query() filter: TransactionsRecapDto) {
+    return this.incomeService.getMonthCategoriesPercentage(filter, user);
   }
 
   @Get("detail/:id")

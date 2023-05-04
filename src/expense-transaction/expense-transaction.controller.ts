@@ -8,6 +8,7 @@ import { User } from 'src/user/entities/user.entity';
 import { AddExpTransactionDto } from './dto/add-exp-transaction.dto';
 import { ExpenseTransactionService } from './expense-transaction.service';
 import { ExpenseMonthlyFilterDto } from './dto/monthly-trans-filter.dto';
+import { TransactionsRecapDto } from 'src/transaction/dto/recap-filter.dto';
 
 @Controller('transaction/expense')
 export class ExpenseTransactionController {
@@ -27,6 +28,12 @@ export class ExpenseTransactionController {
   @UseGuards(JwtAuthGuard)
   getMonthlyTransByCategory(@GetUser() user: User, @Query() filter: ExpenseMonthlyFilterDto) {
     return this.expenseService.getExpenseTransactionsByCategory(filter.category, filter.date, user)
+  }
+
+  @Get("month-spent-categories")
+  @UseGuards(JwtAuthGuard)
+  getMonthlyCategoriesSpent(@GetUser() user: User, @Query() filter: TransactionsRecapDto) {
+    return this.expenseService.getMonthCategoriesSpentPercentage(filter, user);
   }
 
   @Get("detail/:id")

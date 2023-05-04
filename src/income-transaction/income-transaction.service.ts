@@ -18,6 +18,8 @@ import { AddIncTransactionDto } from './dto/add-inc-transaction.dto';
 import { IncomeTransaction } from './entities/income-transaction.entity';
 import { IncomeTransFilterDto } from './dto/filter.dto';
 import * as moment from "moment"
+import { TransactionsRecapDto } from 'src/transaction/dto/recap-filter.dto';
+import { ICategoriesSpent } from 'src/expense-transaction/entities/categories-spent.interface';
 
 const thisModule = "Transactions";
 
@@ -41,7 +43,7 @@ export class IncomeTransactionService {
                 "inc.id", "inc.amount", "inc.category", "inc.date", "inc.title",
                 "inc.description", "inc.created_at", "inc.updated_at", "inc.deleted_at",
                 "cat.id", "cat.title", "wal.id", "wal.name", "wal.amount", "wal.icon", "cr.id", "cr.email",
-                "cr.username", "cat.id", "cat.title", "cat.icon"
+                "cr.firstname", "cr.lastname", "cat.id", "cat.title", "cat.icon"
             ])
         return query;
     }
@@ -173,5 +175,36 @@ export class IncomeTransactionService {
             await this.logService.addLog("Failed to delete income", thisModule, LogType.Failure, ip, user.id);
             throw new InternalServerErrorException(error)
         }
+    }
+
+    async getMonthCategoriesPercentage(dto: TransactionsRecapDto, user: User) {
+        // let searchDate = new Date(moment(dto.month).startOf("month").format("YYYY-MM-DD"))
+        const transactions: ICategoriesSpent[] = await this.incomeRepo.createQueryBuilder("inc")
+            .innerJoin("inc.category", "cat")
+            .leftJoin("inc.created_by", "cr")
+            .select([
+                "inc.category", "cat.title", "cat.icon", "SUM(inc.amount) as total_spent",
+            ])
+            .where("cr.id = :uid", { uid: user.id })
+            .andWhere("inc.date >= :stmonth", { stmonth: moment(dto.month).startOf("month").format("YYYY-MM-DD") })
+            .andWhere("inc.date <= :edmonth", { edmonth: moment(dto.month).endOf("month").format("YYYY-MM-DD") })
+            .groupBy("cat.id")
+            .getRawMany();
+
+        let totalTransactions = 0;
+        transactions.map((trans) => totalTransactions += Number(trans.total_spent))
+        let result: ICategoriesSpent[] = []
+
+        for (const data of transactions) {
+            let percentage = 0;
+            percentage = (data.total_spent / totalTransactions) * 100;
+            let tempResult = {
+                ...data,
+                percentage: Number(percentage.toFixed(2))
+            }
+            result.push(tempResult)
+        }
+
+        return result
     }
 }

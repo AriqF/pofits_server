@@ -37,12 +37,12 @@ export class UserService {
   ) { }
 
   async signUp(registerDto: UserRegisterDto, isAdminRegis?: boolean): Promise<User> {
-    const { username, email, password } = registerDto;
+    const { firstname, lastname, email, password } = registerDto;
 
     const salt = await bc.genSalt();
     const hashedPassword = await bc.hash(password, salt);
     let user = this.userRepo.create({
-      email, username,
+      email, firstname, lastname,
       password: hashedPassword,
       role: isAdminRegis ? Role.Admin : Role.User,
     })
@@ -109,7 +109,7 @@ export class UserService {
   queryGetUser(): SelectQueryBuilder<User> {
     const query = this.userRepo.createQueryBuilder('user')
       .select([
-        'user.id', 'user.username', 'user.email', 'user.role', 'user.last_iat',
+        'user.id', 'user.firstname', 'user.lastname', 'user.email', 'user.role', 'user.last_iat',
         'user.status', 'user.created_at', 'user.updated_at', 'user.deleted_at'
       ]);
     return query

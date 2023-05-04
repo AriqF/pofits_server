@@ -21,7 +21,7 @@ export class WeblogService {
             .leftJoin('weblog.created_by', 'user_cr')
             .select([
                 'weblog.id', 'weblog.module', 'weblog.type', 'weblog.log', 'weblog.created_at',
-                'user_cr.email', 'user_cr.username'
+                'user_cr.email', 'user_cr.firstname', 'user_cr.lastname',
             ])
             .orderBy('weblog.created_at', 'DESC')
         return query
