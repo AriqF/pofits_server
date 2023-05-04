@@ -16,6 +16,9 @@ import { WeblogService } from 'src/weblog/weblog.service';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { AddExpTransactionDto } from './dto/add-exp-transaction.dto';
 import * as moment from "moment"
+import { TransactionsRecapDto } from 'src/transaction/dto/recap-filter.dto';
+import { transcode } from 'buffer';
+import { ICategoriesSpent } from './entities/categories-spent.interface';
 
 const thisModule = "Transactions"
 
@@ -39,7 +42,7 @@ export class ExpenseTransactionService {
                 "exp.id", "exp.amount", "exp.category", "exp.date", "exp.title",
                 "exp.description", "exp.created_at", "exp.updated_at", "exp.deleted_at",
                 "cat.id", "cat.title", "cat.icon", "wal.id", "wal.name", "wal.amount", "wal.icon", "cr.id", "cr.email",
-                "cr.username",
+                "cr.firstname", "cr.lastname",
             ])
         return query;
     }
@@ -104,9 +107,6 @@ export class ExpenseTransactionService {
 
 
     async addExpenseTransactions(user: User, dto: AddExpTransactionDto, ip: string) {
-        const queryRunner = this.expenseRepo.queryRunner;
-        await queryRunner.connect()
-        await queryRunner.startTransaction()
         let newData = this.expenseRepo.create({
             ...dto,
             created_by: user,
@@ -138,12 +138,9 @@ export class ExpenseTransactionService {
                 if (percentage > 75) budgetAlmostLimit = true;
                 if (percentage >= 100) budgetOverLimit = true;
             }
-            await queryRunner.startTransaction()
             return { message: DataSuccessID.DataAdded, budgetAlmostLimit, hasBudget, percentage, budgetOverLimit }
         } catch (error) {
             throw new InternalServerErrorException(error)
-        } finally {
-            await queryRunner.release()
         }
     }
 
@@ -191,5 +188,36 @@ export class ExpenseTransactionService {
             await this.logService.addLog("Failed to delete expense", thisModule, LogType.Failure, ip, user.id);
             throw new InternalServerErrorException(error)
         }
+    }
+
+    async getMonthCategoriesSpentPercentage(dto: TransactionsRecapDto, user: User): Promise<ICategoriesSpent[]> {
+        // let searchDate = new Date(moment(dto.month).startOf("month").format("YYYY-MM-DD"))
+        const transactions: ICategoriesSpent[] = await this.expenseRepo.createQueryBuilder("exp")
+            .innerJoin("exp.category", "cat")
+            .leftJoin("exp.created_by", "cr")
+            .select([
+                "exp.category", "cat.title", "cat.icon", "SUM(exp.amount) as total_spent",
+            ])
+            .where("cr.id = :uid", { uid: user.id })
+            .andWhere("exp.date >= :stmonth", { stmonth: moment(dto.month).startOf("month").format("YYYY-MM-DD") })
+            .andWhere("exp.date <= :edmonth", { edmonth: moment(dto.month).endOf("month").format("YYYY-MM-DD") })
+            .groupBy("cat.id")
+            .getRawMany();
+
+        let totalTransactions = 0;
+        transactions.map((trans) => totalTransactions += Number(trans.total_spent))
+        let result: ICategoriesSpent[] = []
+
+        for (const data of transactions) {
+            let percentage = 0;
+            percentage = (data.total_spent / totalTransactions) * 100;
+            let tempResult = {
+                ...data,
+                percentage: Number(percentage.toFixed(2))
+            }
+            result.push(tempResult)
+        }
+
+        return result
     }
 }

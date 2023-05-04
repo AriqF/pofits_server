@@ -16,6 +16,7 @@ import { IncomeTransaction } from 'src/income-transaction/entities/income-transa
 import { ExpenseTransaction } from 'src/expense-transaction/entities/expense-transaction.entity';
 import { AllTransactionsFilterDto } from './dto/all-transactions-filter.dto';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
+import { ICategoriesSpent } from 'src/expense-transaction/entities/categories-spent.interface';
 
 const thisModule = "Transactions";
 
@@ -57,11 +58,12 @@ export class TransactionService {
         return transactions
     }
 
-    async getTransactionsRecap(user: User, dto: TransactionsRecapDto) {
+    async getTransactionsAmountInfo(user: User, dto: TransactionsRecapDto) {
         let filter: TransactionsFilterDto = new TransactionsFilterDto();
         filter = { start_date: getDateStartMonth(dto.month), end_date: getDateEndMonth(dto.month) }
         const expenses = await this.expenseService.getAllExpTransactionsByFilter(user, filter);
         const incomes = await this.incomeService.getAllIncTransactionsByFilter(user, filter);
+
         let totalExpenses: number = 0;
         let totalIncomes: number = 0;
         let amountDiff: number = 0;
@@ -72,8 +74,20 @@ export class TransactionService {
             totalIncomes += Number(inc.amount);
         })
         amountDiff = totalIncomes - totalExpenses;
+
+        return { totalExpenses, totalIncomes, amountDiff }
+    }
+
+    async getTransactionsRecap(user: User, dto: TransactionsRecapDto) {
+        const transactionAmountInfo = await this.getTransactionsAmountInfo(user, dto);
+        const expensesAllocation = await this.expenseService.getMonthCategoriesSpentPercentage(dto, user);
+        const incomesAllocation = await this.incomeService.getMonthCategoriesPercentage(dto, user);
+
+        const sortedExpAlloc = this.sortPercentageCatSpent(expensesAllocation);
+        const sortedIncAlloc = this.sortPercentageCatSpent(incomesAllocation)
+
         return {
-            totalExpenses, totalIncomes, amountDiff
+            ...transactionAmountInfo, expensesAllocation: sortedExpAlloc, incomesAllocation: sortedIncAlloc
         }
     }
 
@@ -108,5 +122,9 @@ export class TransactionService {
             }
             return result * sortOrder;
         }
+    }
+
+    sortPercentageCatSpent(data: ICategoriesSpent[]) {
+        return data.sort((a, b) => b.percentage - a.percentage);
     }
 }
