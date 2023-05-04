@@ -33,7 +33,6 @@ export class UserController {
   @Get("me")
   @UseGuards(JwtAuthGuard)
   getMyProfile(@GetUser() user: User) {
-    console.log(user.id)
     return this.userService.findOne(user.id)
   }
 
