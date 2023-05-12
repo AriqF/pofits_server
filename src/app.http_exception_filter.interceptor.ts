@@ -43,6 +43,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         console.log({
             timestamp: moment.tz("Asia/Jakarta").format(),
             cause: exception.message,
+            stack: exception.stack ? exception.stack : "",
             ...resErr,
             ...decoded
 
@@ -62,7 +63,6 @@ export class EntityNotFoundFilter implements ExceptionFilter {
         const context = host.switchToHttp();
         const response = context.getResponse<Response>();
         // const errMessage = exception.message;
-        console.log(exception)
         if (response.status(500)) {
             response.json({
                 code: 400,

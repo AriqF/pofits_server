@@ -16,6 +16,8 @@ import { IncomeEstimationModule } from './income-estimation/income-estimation.mo
 import { TransactionModule } from './transaction/transaction.module';
 import { ExpenseTransactionModule } from './expense-transaction/expense-transaction.module';
 import { IncomeTransactionModule } from './income-transaction/income-transaction.module';
+import { FinanceGoalModule } from './finance-goal/finance-goal.module';
+import { GoalTransactionHistoryModule } from './goal-transaction-history/goal-transaction-history.module';
 
 @Module({
   imports: [
@@ -59,6 +61,8 @@ import { IncomeTransactionModule } from './income-transaction/income-transaction
     TransactionModule,
     ExpenseTransactionModule,
     IncomeTransactionModule,
+    FinanceGoalModule,
+    GoalTransactionHistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
