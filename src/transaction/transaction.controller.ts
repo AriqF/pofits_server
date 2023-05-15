@@ -9,6 +9,7 @@ import { TransactionService } from './transaction.service';
 import { TransactionsRecapDto } from './dto/recap-filter.dto';
 import { TransactionsFilterDto } from './dto/transactions-filter.dto';
 import { AllTransactionsFilterDto } from './dto/all-transactions-filter.dto';
+import { AnnualTransactionDto } from './dto/annual-filter.dto';
 
 @Controller('transactions')
 export class TransactionController {
@@ -28,6 +29,12 @@ export class TransactionController {
   @UseGuards(JwtAuthGuard)
   getMonthRecap(@GetUser() user: User, @Query() dto: TransactionsRecapDto) {
     return this.transactionService.getTransactionsRecap(user, dto);
+  }
+
+  @Get("me/annual-recap")
+  @UseGuards(JwtAuthGuard)
+  getAnnualRecap(@GetUser() user: User, @Query() dto: AnnualTransactionDto) {
+    return this.transactionService.getAnnualTransactions(dto, user)
   }
 
 }

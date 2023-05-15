@@ -5,7 +5,7 @@ import { IncomeCategory } from 'src/income-category/entities/income-category.ent
 import { IncomeEstimationService } from 'src/income-estimation/income-estimation.service';
 import { EditTransactionsDto } from 'src/transaction/dto/edit/edit-transactions.dto';
 import { TransactionsFilterDto } from 'src/transaction/dto/transactions-filter.dto';
-import { getAccumulatedTransactions, getIncomeDiffPercentage } from 'src/transaction/helper';
+import { getAccumulatedTransactions, getIncomeDiffPercentage, getMonthName } from 'src/transaction/helper';
 import { User } from 'src/user/entities/user.entity';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
 import { DataSuccessID } from 'src/utils/global/enum/success-message.enum';
@@ -20,6 +20,8 @@ import { IncomeTransFilterDto } from './dto/filter.dto';
 import * as moment from "moment"
 import { TransactionsRecapDto } from 'src/transaction/dto/recap-filter.dto';
 import { ICategoriesSpent } from 'src/expense-transaction/entities/categories-spent.interface';
+import { AnnualTransactionDto } from 'src/transaction/dto/annual-filter.dto';
+import { AnnualTransaction, AnnualTransactionQuery } from 'src/transaction/interfaces/raw-responses';
 
 const thisModule = "Transactions";
 
@@ -205,6 +207,25 @@ export class IncomeTransactionService {
             result.push(tempResult)
         }
 
+        return result
+    }
+
+    async getAnnualTransactions(dto: AnnualTransactionDto, user: User) {
+        let recap: AnnualTransactionQuery[] = await this.incomeRepo.createQueryBuilder("inc")
+            .leftJoin("inc.created_by", "cr")
+            .select([
+                "SUM(inc.amount) as total_amount", "MONTH(inc.date) as month",
+            ])
+            .where("cr.id = :uid", { uid: user.id })
+            .andWhere("YEAR(inc.date) = :yr", { yr: dto.date.getFullYear() })
+            .distinct(true)
+            .groupBy("month")
+            .getRawMany();
+
+        let result: AnnualTransaction[] = [];
+        recap.map((data, index) => {
+            result.push({ total_amount: data.total_amount, month: getMonthName(data.month) })
+        })
         return result
     }
 }

@@ -9,6 +9,7 @@ import { AddExpTransactionDto } from './dto/add-exp-transaction.dto';
 import { ExpenseTransactionService } from './expense-transaction.service';
 import { ExpenseMonthlyFilterDto } from './dto/monthly-trans-filter.dto';
 import { TransactionsRecapDto } from 'src/transaction/dto/recap-filter.dto';
+import { AnnualTransactionDto } from 'src/transaction/dto/annual-filter.dto';
 
 @Controller('transaction/expense')
 export class ExpenseTransactionController {
@@ -40,6 +41,12 @@ export class ExpenseTransactionController {
   @UseGuards(JwtAuthGuard)
   getExpenseById(@Param("id") id: number, @GetUser() user: User) {
     return this.expenseService.getExpenseTransactionsById(id, user)
+  }
+
+  @Get("annual")
+  @UseGuards(JwtAuthGuard)
+  getAnnual(@Query() dto: AnnualTransactionDto, @GetUser() user: User) {
+    return this.expenseService.getAnnualTransactions(dto, user)
   }
 
   @Post("add")
