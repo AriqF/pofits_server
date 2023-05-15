@@ -1,5 +1,5 @@
-import { Transform } from "class-transformer";
-import { IsBoolean, IsOptional, IsString } from "class-validator";
+import { Transform, Type } from "class-transformer";
+import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator";
 
 
 export class GoalFilterDto {
@@ -14,4 +14,14 @@ export class GoalFilterDto {
 
     @IsOptional()
     order?: "ASC" | "DESC";
+
+    @Type(() => Number)
+    @IsOptional()
+    @IsNumber()
+    take?: number;
+
+    @Type(() => Number)
+    @IsOptional()
+    @IsNumber()
+    page?: number;
 }
