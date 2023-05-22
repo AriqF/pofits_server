@@ -24,4 +24,12 @@ export class WeblogController {
         }
         return this.logService.getAllLogs()
     }
+
+    @Get("count")
+    @Roles(Role.Admin)
+    @UseGuards(RolesGuard)
+    @UseGuards(JwtAuthGuard)
+    getCountLogs() {
+        return this.logService.getTotalLogs()
+    }
 }

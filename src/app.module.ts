@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -18,6 +18,7 @@ import { ExpenseTransactionModule } from './expense-transaction/expense-transact
 import { IncomeTransactionModule } from './income-transaction/income-transaction.module';
 import { FinanceGoalModule } from './finance-goal/finance-goal.module';
 import { GoalTransactionHistoryModule } from './goal-transaction-history/goal-transaction-history.module';
+import { LoggerMiddleware } from './middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -67,4 +68,9 @@ import { GoalTransactionHistoryModule } from './goal-transaction-history/goal-tr
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes("/")
+  }
+
+}

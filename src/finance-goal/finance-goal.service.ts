@@ -56,9 +56,9 @@ export class FinanceGoalService {
     }
 
     async findAllUserGoalsByFilter(user: User, filter: GoalFilterDto): Promise<GoalResponse[]> {
-        let { search, order, achieved } = filter;
+        let { search, order, achieved, take, page } = filter;
         if (!order) order = "ASC";
-        console.log({ search })
+        if (!page) page = 1
         let data = this.getQueryGoal()
         if (search) {
             data.where("goal.title LIKE :src", { src: `%${search}%` })
@@ -67,6 +67,10 @@ export class FinanceGoalService {
             data.andWhere("goal.isAchieved = :val", { val: achieved })
         }
         data.andWhere("cr.id = :uid", { uid: user.id })
+        if (take) {
+            data.take(take)
+            data.skip(take * (page - 1))
+        }
         const dataRes = await data
             .orderBy("goal.priority", "DESC")
             .addOrderBy("goal.isAchieved", "DESC")

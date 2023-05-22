@@ -8,6 +8,7 @@ export enum UserErrorID {
     TokenNotFound = "Token tidak ditemukan",
     InactiveUser = "Pengguna sudah tidak aktif atau sudah dihapus",
     OldPasswordSame = "Kata sandi yang baru tidak dapat sama dengan yang lama",
+    OldPasswordNotMatch = "Kata sandi lama salah",
     DeactiveFailed = "Gagal dalam menonaktifkan akun. ",
     UserAlreadyActivated = "Pengguna sudah dalam status aktif",
     RestoreFailed = "Gagal dalam mengaktifkan kembali akun.",

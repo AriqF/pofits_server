@@ -39,14 +39,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
             status = 422
             resErr.code = 422;
         }
-
         console.log({
             timestamp: moment.tz("Asia/Jakarta").format(),
             cause: exception.message,
             stack: exception.stack ? exception.stack : "",
             ...resErr,
-            ...decoded
-
+            ...decoded,
+            ...exception,
         })
 
         response

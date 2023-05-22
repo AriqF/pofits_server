@@ -19,4 +19,8 @@ export function getIncomeDiffPercentage(estimation: IncomeEstimation, transAmoun
     return (transAmount / estimation.amount) * 100;
 }
 
+export function getMonthName(month: number) {
+    const monthnames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+    return monthnames[month - 1]
+}
 

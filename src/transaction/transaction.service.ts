@@ -17,6 +17,8 @@ import { ExpenseTransaction } from 'src/expense-transaction/entities/expense-tra
 import { AllTransactionsFilterDto } from './dto/all-transactions-filter.dto';
 import { DataErrorID } from 'src/utils/global/enum/error-message.enum';
 import { ICategoriesSpent } from 'src/expense-transaction/entities/categories-spent.interface';
+import { BudgetFilterDto } from 'src/budget/dto/filter-budget.dto';
+import { AnnualTransactionDto } from './dto/annual-filter.dto';
 
 const thisModule = "Transactions";
 
@@ -79,16 +81,31 @@ export class TransactionService {
     }
 
     async getTransactionsRecap(user: User, dto: TransactionsRecapDto) {
-        const transactionAmountInfo = await this.getTransactionsAmountInfo(user, dto);
-        const expensesAllocation = await this.expenseService.getMonthCategoriesSpentPercentage(dto, user);
-        const incomesAllocation = await this.incomeService.getMonthCategoriesPercentage(dto, user);
+        const budgetDto = new BudgetFilterDto();
+        budgetDto.month = dto.month
+        const [transactionAmountInfo, expensesAllocation, incomesAllocation, budgets] = await Promise.all([
+            this.getTransactionsAmountInfo(user, dto),
+            this.expenseService.getMonthCategoriesSpentPercentage(dto, user),
+            this.incomeService.getMonthCategoriesPercentage(dto, user),
+            this.budgetService.getMonthlyRecap(budgetDto, user)
+        ])
 
         const sortedExpAlloc = this.sortPercentageCatSpent(expensesAllocation);
-        const sortedIncAlloc = this.sortPercentageCatSpent(incomesAllocation)
+        const sortedIncAlloc = this.sortPercentageCatSpent(incomesAllocation);
 
         return {
-            ...transactionAmountInfo, expensesAllocation: sortedExpAlloc, incomesAllocation: sortedIncAlloc
+            ...transactionAmountInfo, expensesAllocation: sortedExpAlloc, incomesAllocation: sortedIncAlloc,
+            totalBudget: budgets.totalBudget
         }
+    }
+
+    async getAnnualTransactions(dto: AnnualTransactionDto, user: User) {
+        const [expenses, incomes] = await Promise.all([
+            this.expenseService.getAnnualTransactions(dto, user),
+            this.incomeService.getAnnualTransactions(dto, user)
+        ])
+        return { expenses, incomes }
+
     }
 
     async mergeTransactionsData(incomes: IncomeTransaction[], expenses: ExpenseTransaction[],

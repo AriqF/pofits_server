@@ -10,6 +10,9 @@ export class Weblog {
     @Column()
     log: string;
 
+    @Column({ length: 100, nullable: true })
+    user_email: string;
+
     @Column()
     module: string;
 
@@ -19,7 +22,7 @@ export class Weblog {
     @Column({ length: 255 })
     ip_address: string;
 
-    @ManyToOne(() => User, user => user.id, { onDelete: "CASCADE" })
+    @ManyToOne(() => User, user => user.id, { onDelete: "NO ACTION" })
     @JoinColumn({ name: "created_by" })
     created_by: User;
 

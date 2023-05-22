@@ -13,7 +13,7 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
         private readonly userService: UserService
     ) {
         super({
-            secretOrKey: "pofits-secret",
+            secretOrKey: process.env.SECRET_KEY,
             ignoreExpiration: false,
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
         })

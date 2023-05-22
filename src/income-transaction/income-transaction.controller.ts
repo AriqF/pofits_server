@@ -10,6 +10,7 @@ import { IncomeTransactionService } from './income-transaction.service';
 import { IncomeTransFilterDto } from './dto/filter.dto';
 import { IncomeMonthlyFilterDto } from './dto/monthly-trans-filter.dto';
 import { TransactionsRecapDto } from 'src/transaction/dto/recap-filter.dto';
+import { AnnualTransactionDto } from 'src/transaction/dto/annual-filter.dto';
 
 @Controller('transaction/income')
 export class IncomeTransactionController {
@@ -40,6 +41,12 @@ export class IncomeTransactionController {
   @UseGuards(JwtAuthGuard)
   getIncomeById(@Param("id") id: number, @GetUser() user: User) {
     return this.incomeService.getIncomeTransactionsById(id, user)
+  }
+
+  @Get("annual")
+  @UseGuards(JwtAuthGuard)
+  getAnnual(@Query() dto: AnnualTransactionDto, @GetUser() user: User) {
+    return this.incomeService.getAnnualTransactions(dto, user)
   }
 
   @Post("add")

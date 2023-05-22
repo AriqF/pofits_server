@@ -131,14 +131,14 @@ export class UserService {
       .withDeleted();
 
     if (search) {
-      users.where('user.fullname LIKE :src OR user.email LIKE :src', { src: `%${search}%` })
+      users.where('user.firstname LIKE :src OR user.lastname LIKE :src OR user.email LIKE :src', { src: `%${search}%` })
     }
 
     if (status) users.andWhere('user.status = :sts', { sts: status })
 
     const filteredUsers = await users
-      .take(15)
-      .skip(15 * (page - 1))
+      // .take(15)
+      // .skip(15 * (page - 1))
       .orderBy('user.status', 'DESC')
       .getMany();
 
@@ -199,11 +199,14 @@ export class UserService {
       try {
         await this.updatePassword(id, password);
         await this.logService.addLog("Updated password in profile setting", thisModule, LogType.Info, ip, id)
+        return { message: "Kata sandi berhasil diubah" }
       } catch (error) {
         await this.logService.addLog(`Failed to update password in profile setting: ${String(error)}`, thisModule, LogType.Info, ip, id)
         throw new InternalServerErrorException("Failed to update password")
       }
-      return { message: "Kata sandi berhasil diubah" }
+
+    } else {
+      throw new BadRequestException(UserErrorID.OldPasswordNotMatch)
     }
   }
 
@@ -219,6 +222,21 @@ export class UserService {
       return updated;
     } catch (error) {
       throw new BadRequestException(error)
+    }
+  }
+
+  async resetToDefaultPassword(id: number, admin: User, ip: string): Promise<Object> {
+    const user: User = await this.findOne(id);
+    if (!user) throw new NotFoundException(DataErrorID.NotFound);
+    try {
+      await this.updatePassword(id, "halopofits123");
+      await this.logService.addLog(`Reseted a default password for account ${user.email}`, thisModule, LogType.Info, ip, admin.id)
+      return {
+        message: "Password Berhasil direset"
+      }
+    } catch (error) {
+      await this.logService.addLog(`Failed to reset default password for account ${user.email}`, thisModule, LogType.Failure, ip, admin.id)
+      throw new InternalServerErrorException(error)
     }
   }
 
@@ -285,6 +303,27 @@ export class UserService {
     } catch (error) {
       await this.logService.addLog("Permanently deleted account" + user.email, thisModule, LogType.Info, ip, executant.id)
       throw new InternalServerErrorException(UserErrorID.DeleteFailed)
+    }
+  }
+
+
+  async getTotalUsers(): Promise<Object> {
+    const countActives = await this.userRepo.count({
+      where: {
+        status: 1,
+        deleted_at: null,
+      }
+    })
+    const countInactives = await this.userRepo.count({
+      where: {
+        status: 0,
+      },
+      withDeleted: true,
+    })
+
+    return {
+      actives: countActives,
+      inactives: countInactives,
     }
   }
 }
