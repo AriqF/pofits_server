@@ -17,13 +17,14 @@ export class WeblogService {
     ) { }
 
     getQueryLog(): SelectQueryBuilder<Weblog> {
-        const query = this.wlogRepo.createQueryBuilder('weblog')
-            .leftJoin('weblog.created_by', 'user_cr')
+        const query = this.wlogRepo.createQueryBuilder('log')
+            .leftJoin('log.created_by', 'user_cr')
             .select([
-                'weblog.id', 'weblog.module', 'weblog.type', 'weblog.log', 'weblog.created_at',
-                'user_cr.email', 'user_cr.firstname', 'user_cr.lastname',
+                'log.id', 'log.module', 'log.type', 'log.log', 'log.created_at',
+                'log.ip_address', 'user_cr.id',
+                'log.user_email', 'user_cr.firstname', 'user_cr.lastname',
             ])
-            .orderBy('weblog.created_at', 'DESC')
+            .orderBy('log.created_at', 'DESC')
         return query
     }
 
@@ -33,22 +34,29 @@ export class WeblogService {
         return logs
     }
 
-    async getLogsByFilter(filter: LogFilterDto): Promise<Weblog[]> {
-        let { month, year, page } = filter
+    async getLogsByFilter(filter: LogFilterDto): Promise<any> {
+        let { month, year, page, take, search } = filter;
+
         if (!page) page = 1;
 
         const query = this.getQueryLog();
+
+        if (search) query.where("log.log LIKE :src OR user_cr.email LIKE :src OR user_cr.firstname LIKE :src OR user_cr.lastname LIKE :src OR log.type LIKE :src", { src: `%${search}%` })
 
         if (month) query.andWhere('month(log.created_at) = :m', { m: month })
 
         if (year) query.andWhere('year(log.created_at) = :y', { y: year })
 
+        if (take) {
+            query.take(take)
+            query.skip(take * (page - 1))
+        }
+
         let logs = await query
-            .take(15)
-            .skip(15 * (page - 1))
+            .orderBy("log.created_at", "DESC")
             .getMany();
 
-        if (logs.length == 0) throw new NotFoundException("No Filter Match This Criteria")
+        // if (logs.length == 0) throw new NotFoundException("No Filter Match This Criteria")
 
         return logs
     }
@@ -62,11 +70,23 @@ export class WeblogService {
                 ip_address: ip,
                 module: module,
                 type: type ? type : LogType.Info,
-                created_by: user
+                created_by: user ? user : null,
+                user_email: user ? user.email : "SYSTEM",
             })
             newLog = await this.wlogRepo.save(newLog);
         } catch (error) {
             throw new InternalServerErrorException("Failed to add log: " + error)
+        }
+    }
+
+    async getTotalLogs(): Promise<Object> {
+        const infoLogs = await this.wlogRepo.count({ where: { type: LogType.Info } })
+        const failureLogs = await this.wlogRepo.count({ where: { type: LogType.Failure } })
+        const total = await this.wlogRepo.count();
+        return {
+            info_logs: infoLogs,
+            failure_logs: failureLogs,
+            total: total
         }
     }
 
