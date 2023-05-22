@@ -36,6 +36,14 @@ export class UserController {
     return this.userService.findOne(user.id)
   }
 
+  @Get("count")
+  @Roles(Role.Admin)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
+  getCountActiveUsers() {
+    return this.userService.getTotalUsers();
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @UsePipes(new ValidationPipe({ transform: true }))
@@ -56,6 +64,14 @@ export class UserController {
   @UsePipes(new ValidationPipe({ transform: true }))
   updateUserPassword(@GetUser() user: User, @Body() passwordDto: ChangePasswordDto, @RealIP() ip: string) {
     return this.userService.changeNewPassword(user.id, passwordDto, ip)
+  }
+
+  @Patch('reset-default-password/:id')
+  @Roles(Role.Admin)
+  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard)
+  resetToDefaultPassword(@GetUser() admin: User, @Param("id") userId: number, @RealIP() ip: string) {
+    return this.userService.resetToDefaultPassword(userId, admin, ip)
   }
 
   @Delete('soft-delete/me')
