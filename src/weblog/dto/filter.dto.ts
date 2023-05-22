@@ -1,4 +1,5 @@
-import { IsNumber, IsOptional } from "class-validator";
+import { Type } from "class-transformer";
+import { IsNumber, IsOptional, IsString } from "class-validator";
 
 
 export class LogFilterDto {
@@ -10,6 +11,15 @@ export class LogFilterDto {
     @IsNumber()
     month: number;
 
+    @IsString()
     @IsOptional()
-    page: number = 1;
+    search?: string;
+
+    @Type(() => Number)
+    @IsOptional()
+    @IsNumber()
+    take?: number;
+
+    @IsOptional()
+    page?: number;
 }
