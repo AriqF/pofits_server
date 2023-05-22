@@ -140,8 +140,10 @@ export class ExpenseTransactionService {
                 if (percentage > 75) budgetAlmostLimit = true;
                 if (percentage >= 100) budgetOverLimit = true;
             }
+            await this.logService.addLog("Added expense", thisModule, LogType.Info, ip, user.id)
             return { message: DataSuccessID.DataAdded, budgetAlmostLimit, hasBudget, percentage, budgetOverLimit }
         } catch (error) {
+            await this.logService.addLog("Failed to add expense: " + error, thisModule, LogType.Failure, ip, user.id)
             throw new InternalServerErrorException(error)
         }
     }

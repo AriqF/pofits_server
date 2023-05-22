@@ -129,9 +129,10 @@ export class IncomeTransactionService {
                 hasEstimation = true;
             }
             if (dto.wallet) await this.walletService.addWalletAmount(dto.wallet, dto.amount)
-
+            await this.logService.addLog("Added income", thisModule, LogType.Info, ip, user.id)
             return { message: DataSuccessID.DataAdded, hasEstimation, hasFulfilled, percentage }
         } catch (error) {
+            await this.logService.addLog("Failed to add income: " + error, thisModule, LogType.Failure, ip, user.id)
             throw new InternalServerErrorException(error)
         }
     }
