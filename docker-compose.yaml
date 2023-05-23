@@ -1,6 +1,6 @@
 version: '1'
 
-services:  
+services:
   backend:
   build: ./
   container_name: pofitsapp_api
@@ -19,10 +19,10 @@ services:
   networks:
     - pofits_network
 
-  database: 
+  database:
     image: mysql
     container_name: mysql_db
-    ports: 
+    ports:
       - "3306:3306"
     volumes:
       - './mysql-backup:/data/db'
