@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import helmet from 'helmet';
+// import helmet from 'helmet';
 import { EntityNotFoundFilter, HttpExceptionFilter } from './app.http_exception_filter.interceptor';
 import { ValidationPipe } from '@nestjs/common/pipes';
 import "moment/locale/id";
@@ -8,7 +8,7 @@ import * as moment from "moment";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
-  app.use(helmet());
+  // app.use(helmet());
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, disableErrorMessages: false }))
   app.useGlobalFilters(new HttpExceptionFilter())
   app.useGlobalFilters(new EntityNotFoundFilter())
