@@ -2,22 +2,22 @@ version: '1'
 
 services:
   backend:
-  build: ./
-  container_name: pofitsapp_api
-  environment:
-    - PORT=3000
-    - JWT_SECRET=pofits_secret
-    - DB_PORT = 3306
-    - DB_USERNAME = root
-    - DB_PASSWORD = root
-    - DB_NAME = pofits
-    - DB_SYNCHRONIZE = true
-  ports:
-    - '3000:3000'
-  depends_on:
-    - database 
-  networks:
-    - pofits_network
+    build: ./
+    container_name: pofitsapp_api
+    environment:
+      - PORT=3000
+      - JWT_SECRET=pofits_secret
+      - DB_PORT = 3306
+      - DB_USERNAME = root
+      - DB_PASSWORD = root
+      - DB_NAME = pofits
+      - DB_SYNCHRONIZE = true
+    ports:
+      - '3000:3000'
+    depends_on:
+      - database 
+    networks:
+      - pofits_network
 
   database:
     image: mysql
