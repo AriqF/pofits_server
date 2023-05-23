@@ -22,7 +22,7 @@ services:
   database:
     image: mysql
     container_name: mysql_db
-    ports: 
+    ports:
       - "3306:3306"
     volumes:
       - './mysql-backup:/data/db'
