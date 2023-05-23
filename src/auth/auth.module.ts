@@ -18,7 +18,7 @@ import { WeblogModule } from 'src/weblog/weblog.module';
       defaultStrategy: "jwt",
     }),
     JwtModule.register({
-      secret: process.env.SECRET_KEY,
+      secret: "pofits-secret",
       signOptions: {
         expiresIn: 3600
       }
