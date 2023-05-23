@@ -4,9 +4,10 @@ services:
   backend:
     build: ./
     container_name: pofitsapp_api
+    image: pofits_api
     environment:
-      - PORT=3000
-      - JWT_SECRET=pofits_secret
+      - PORT= 3000
+      - JWT_SECRET= pofits_secret
       - DB_PORT = 3306
       - DB_USERNAME = root
       - DB_PASSWORD = root
