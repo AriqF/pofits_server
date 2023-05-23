@@ -6,13 +6,17 @@ services:
     container_name: pofitsapp_api
     image: pofits_api
     environment:
-      - PORT= 3000
-      - JWT_SECRET= pofits_secret
+      - PORT = 3000
+      - SECRET_KEY = pofits_secret
       - DB_PORT = 3306
       - DB_USERNAME = root
       - DB_PASSWORD = root
       - DB_NAME = pofits
       - DB_SYNCHRONIZE = true
+      - DB_HOST = database
+      - SMTP_HOST = smtp.gmail.com
+      - SMTP_USERNAME = pofitsapp@gmail.com
+      - SMTP_PASSWORD = lyqecjdkwjqlwsga
     ports:
       - '3000:3000'
     depends_on:
@@ -23,8 +27,15 @@ services:
   database:
     image: mysql
     container_name: mysql_db
+    environment:
+      - MYSQL_DATABASE: "pofits"
+      - MYSQL_USER: "root"
+      - MYSQL_ROOT_PASSWORD: "root"
+      - MYSQL_ROOT_PASSWORD: "root"
     ports:
       - "3306:3306"
+    expose: 
+      - "3306"
     volumes:
       - './mysql-backup:/data/db'
     networks:
