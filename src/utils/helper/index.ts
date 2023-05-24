@@ -80,3 +80,19 @@ export function getStartEndDateFmt(start_date: Date, end_date: Date, isRepeat: b
 
     return [startDateFmt, endDateFmt]
 }
+
+export function isIpv6(ip: string): boolean {
+    const v6RegexExp = /(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))/gi;
+    return v6RegexExp.test(ip);
+}
+
+export function convertV6toV4(ip: string): string {
+    let split_str = ip.split(":");
+    ip = split_str[6] + split_str[7];
+    let ip_1 = ~parseInt(ip.toString().substring(0, 2), 16) & 0xFF;
+    let ip_2 = ~parseInt(ip.toString().substring(2, 4), 16) & 0xFF;
+    let ip_3 = ~parseInt(ip.toString().substring(4, 6), 16) & 0xFF;
+    let ip_4 = ~parseInt(ip.toString().substring(6, 8), 16) & 0xFF;
+
+    return `${ip_1}.${ip_2}.${ip_3}.${ip_4}`;
+}
