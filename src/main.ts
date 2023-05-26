@@ -8,14 +8,8 @@ import * as moment from "moment";
 import * as fs from "fs"
 
 async function bootstrap() {
-  // const httpsOptions = {
-  //   key: fs.readFileSync(__dirname + "/ssl/key.pem"),
-  //   cert: fs.readFileSync(__dirname + "/ssl/cert.pem"),
-  // }
+  const app = await NestFactory.create(AppModule);
 
-  const app = await NestFactory.create(AppModule, { cors: true });
-
-  // app.use(helmet());
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, disableErrorMessages: false }))
   app.useGlobalFilters(new HttpExceptionFilter())
   app.useGlobalFilters(new EntityNotFoundFilter())
