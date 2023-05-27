@@ -11,6 +11,7 @@ import { MoveWalletDto } from './dto/move-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
 import { Wallet } from './entities/wallet.entity';
 import { WalletCategory } from './interfaces/wallet-category.enum';
+import { type } from 'os';
 
 const thisModule = "Wallet"
 
@@ -134,13 +135,15 @@ export class WalletService {
         }
     }
 
-    async addWalletAmount(walletId: number | Wallet, amount: number): Promise<UpdateResult> {
-        const wallet = await this.getWalletQuery()
-            .where("wl.id = :wid", { wid: walletId })
-            .getOne()
-        if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
+    async addWalletAmount(wallet: number | Wallet, amount: number): Promise<UpdateResult> {
+        if (typeof wallet === "number") {
+            wallet = await this.getWalletQuery()
+                .where("wl.id = :wid", { wid: wallet })
+                .getOne()
+            if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
+        }
         try {
-            return await this.walletRepo.update(walletId, {
+            return await this.walletRepo.update(wallet.id, {
                 amount: Number(wallet.amount) + Number(amount)
             });
         } catch (error) {
@@ -148,15 +151,19 @@ export class WalletService {
         }
     }
 
-    async subsWalletAmount(walletId: number | Wallet, amount: number) {
-        const wallet = await this.getWalletQuery()
-            .where("wl.id = :wid", { wid: walletId })
-            .getOne()
-        if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
+    async subsWalletAmount(wallet: number | Wallet, amount: number) {
+        if (typeof wallet === "number") {
+            wallet = await this.getWalletQuery()
+                .where("wl.id = :wid", { wid: wallet })
+                .getOne()
+            if (!wallet) throw new NotFoundException(DataErrorID.NotFound)
+
+        }
         try {
-            return await this.walletRepo.update(walletId, {
-                amount: Number(wallet.amount) - Number(amount)
+            const update = await this.walletRepo.update(wallet.id, {
+                amount: Number(wallet.amount) - amount
             });
+            return update
         } catch (error) {
             throw new InternalServerErrorException(error)
         }

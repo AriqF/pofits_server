@@ -22,6 +22,7 @@ import { TransactionsRecapDto } from 'src/transaction/dto/recap-filter.dto';
 import { ICategoriesSpent } from 'src/expense-transaction/entities/categories-spent.interface';
 import { AnnualTransactionDto } from 'src/transaction/dto/annual-filter.dto';
 import { AnnualTransaction, AnnualTransactionQuery } from 'src/transaction/interfaces/raw-responses';
+import { Wallet } from 'src/wallet/entities/wallet.entity';
 
 const thisModule = "Transactions";
 
@@ -139,17 +140,41 @@ export class IncomeTransactionService {
 
     async editIncome(incId: number, user: User, dto: EditTransactionsDto, ip: string) {
         const income = await this.incomeRepo.findOne({ where: { id: incId } })
-        if (!income) throw new NotFoundException(DataErrorID.NotFound)
-        if (dto.amount !== income.amount) {
-            const wallet = income.wallet;
-            if (wallet) {
-                const amountDiff = Math.abs(dto.amount - income.amount);
-                if (dto.amount > income.amount) {
-                    await this.walletService.subsWalletAmount(wallet.id, amountDiff)
-                } else if (dto.amount < income.amount) {
-                    await this.walletService.addWalletAmount(wallet.id, amountDiff)
+        if (!income) throw new NotFoundException(DataErrorID.NotFound);
+
+        //check wallet
+        let currWallet: Wallet = income.wallet;
+        let walletChanged = false;
+        let newWallet: Wallet = await this.walletService.getOneWallet(dto.wallet);
+
+        if (dto.wallet && !currWallet) {
+            //handle when current data not having wallet and user add new one
+            await this.walletService.addWalletAmount(newWallet, dto.amount);
+        } else if (newWallet) {
+            if (newWallet.id !== currWallet.id) {
+                walletChanged = true;
+            }
+            //handle amount data difference
+            if (income.amount !== dto.amount) {
+                if (walletChanged) {
+                    //reverse current wallet amount
+                    await this.walletService.subsWalletAmount(currWallet, income.amount);
+                    //add amount to new wallet
+                    await this.walletService.addWalletAmount(newWallet, dto.amount);
+                } else {
+                    //handle if wallet is not change
+                    const amountDiff = Math.abs(dto.amount - Number(income.amount));
+                    if (dto.amount > income.amount) {
+                        await this.walletService.addWalletAmount(currWallet, amountDiff);
+                    } else if (dto.amount < income.amount) {
+                        await this.walletService.subsWalletAmount(currWallet, amountDiff)
+                    }
                 }
             }
+
+
+        } else if (!dto.wallet && currWallet) {
+            await this.walletService.subsWalletAmount(currWallet.id, income.amount)
         }
 
         try {
