@@ -21,20 +21,25 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
 
     async validate(payload: IJWTPayload): Promise<User> {
         const { email } = payload;
-        const user: User = await this.userService.getOneByEmail(email)
-        if (!user) {
-            throw new UnauthorizedException()
+        try {
+            const user: User = await this.userService.getOneByEmail(email)
+            if (!user) {
+                throw new UnauthorizedException()
+            }
+            // if (payload.isRefresh) {
+            //     throw new UnauthorizedException()
+            // }
+
+            if (user.status != 1) {
+                throw new UnauthorizedException("User not active or has been deleted")
+            }
+
+
+            delete user.password
+            return user;
+        } catch (error) {
+            throw new UnauthorizedException(error)
         }
-        // if (payload.isRefresh) {
-        //     throw new UnauthorizedException()
-        // }
 
-        if (user.status != 1) {
-            throw new UnauthorizedException("User not active or has been deleted")
-        }
-
-        delete user.password
-
-        return user;
     }
 }
