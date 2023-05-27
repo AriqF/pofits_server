@@ -49,10 +49,10 @@ export class TransactionService {
         }
         if (!dto.end_date) dto.end_date = dto.start_date
 
-        if (dto.includeExp) {
+        if (dto.expenses) {
             expenses = await this.expenseService.getAllExpTransactionsByFilter(user, dto);
         }
-        if (dto.includeInc) {
+        if (dto.incomes) {
             incomes = await this.incomeService.getAllIncTransactionsByFilter(user, dto);
         }
         const transactions = await this.mergeTransactionsData(incomes, expenses, "date", "DESC");

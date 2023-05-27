@@ -7,11 +7,11 @@ export class AllTransactionsFilterDto extends TransactionsFilterDto {
 
     @IsNotEmpty()
     @Transform(({ value }) => value === 'true')
-    includeExp: boolean;
+    expenses: boolean;
 
 
     @IsNotEmpty()
     @Transform(({ value }) => value === 'true')
-    includeInc: boolean;
+    incomes: boolean;
 
 }
