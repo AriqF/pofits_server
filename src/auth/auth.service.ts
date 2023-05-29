@@ -14,6 +14,7 @@ import { EmailService } from 'src/email/email.service';
 import { SetNewPasswordDto } from './dto/new-password.dto';
 import { Role } from 'src/user/interfaces/role.enum';
 import { DataErrorID, UserErrorID } from 'src/utils/global/enum/error-message.enum';
+import { frontend } from 'src/utils/global/variables/config';
 
 const thisModule = "Auth";
 @Injectable()
@@ -68,7 +69,7 @@ export class AuthService {
             throw new InternalServerErrorException(DataErrorID.UpdateFailed)
         }
 
-        let resetUrl: string = "https://pofitsapp-demo.vercel.app/auth/reset-password?token=";
+        let resetUrl: string = frontend + "/auth/reset-password?token=";
         try {
             let emailDto: EmailDto = new EmailDto();
             emailDto.to = [user.email];
