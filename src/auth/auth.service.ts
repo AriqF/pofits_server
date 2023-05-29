@@ -74,10 +74,13 @@ export class AuthService {
             let emailDto: EmailDto = new EmailDto();
             emailDto.to = [user.email];
             emailDto.subject = "Permintaan pengaturan ulang kata sandi";
-            emailDto.body = {};
+            emailDto.body = {
+                user,
+                body: { link: resetUrl + resetToken }
+            };
             emailDto.html = `<h2>Hai!</h2>
-                <p>Klik tautan berikut untuk mengatur ulang kata sandimu. Tautan hanya akan valid selama 20 menit kedepan <br /></p>
-                <p>${resetUrl}${resetToken}</p>`;
+                <p>Klik tombol berikut untuk mengatur ulang kata sandimu. <br/> Tautan hanya akan valid selama 20 menit kedepan <br /></p>
+                <a href=${resetUrl}${resetToken}>Atur Ulang Kata Sandi</a>`;
             await this.emailService.send(emailDto);
 
             const log = "Requested a reset password url";
