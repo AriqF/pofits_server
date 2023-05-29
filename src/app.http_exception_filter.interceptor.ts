@@ -104,13 +104,7 @@ export class AllExceptionFilter implements ExceptionFilter {
                 ? exception.getStatus()
                 : HttpStatus.INTERNAL_SERVER_ERROR;
 
-        const responseBody = {
-            exception: "AllException",
-            statusCode: httpStatus,
-            timestamp: moment.tz("Asia/Jakarta").format(),
-            path: httpAdapter.getRequestUrl(ctx.getRequest()),
-            unknownException: exception,
-        };
+        const responseBody = exception
         console.log(responseBody)
         httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
     }
