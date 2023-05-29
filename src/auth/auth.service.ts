@@ -69,7 +69,7 @@ export class AuthService {
             throw new InternalServerErrorException(DataErrorID.UpdateFailed)
         }
 
-        let resetUrl: string = frontend + "auth/reset-password?token=";
+        let resetUrl: string = frontend + "/auth/reset-password?token=";
         try {
             let emailDto: EmailDto = new EmailDto();
             emailDto.to = [user.email];
