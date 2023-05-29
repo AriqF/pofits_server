@@ -1,3 +1,3 @@
 
 
-export const deploymentFE = process.env.FRONTEND
+export const frontend = process.env.FRONTEND
