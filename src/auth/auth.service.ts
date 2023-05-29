@@ -68,7 +68,7 @@ export class AuthService {
             throw new InternalServerErrorException(DataErrorID.UpdateFailed)
         }
 
-        let resetUrl: string = "http://localhost:2095/auth/reset-password?token=";
+        let resetUrl: string = "https://pofitsapp-demo.vercel.app/auth/reset-password?token=";
         try {
             let emailDto: EmailDto = new EmailDto();
             emailDto.to = [user.email];
