@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, isNotEmpty } from "class-validator";
 import { Wallet } from "src/wallet/entities/wallet.entity";
 
 
@@ -19,4 +19,9 @@ export class EditTransactionsDto {
     @IsNumber()
     @IsNotEmpty()
     amount: number;
+
+    @Type(() => Date)
+    @IsDate()
+    @IsNotEmpty()
+    date: Date;
 }
