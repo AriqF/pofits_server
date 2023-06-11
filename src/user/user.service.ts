@@ -118,6 +118,7 @@ export class UserService {
   async findAll(): Promise<User[]> {
     const users = await this.queryGetUser()
       .withDeleted()
+      .orderBy('user.id', "ASC")
       .orderBy('user.status', 'DESC')
       .getMany();
     if (users.length == 0) throw new NotFoundException(UserErrorID.NotFound);
@@ -139,6 +140,7 @@ export class UserService {
     const filteredUsers = await users
       // .take(15)
       // .skip(15 * (page - 1))
+      .orderBy('user.id', "ASC")
       .orderBy('user.status', 'DESC')
       .getMany();
 
