@@ -22,6 +22,7 @@ import { ICategoriesSpent } from './entities/categories-spent.interface';
 import { AnnualTransactionDto } from 'src/transaction/dto/annual-filter.dto';
 import { AnnualTransaction, AnnualTransactionQuery } from 'src/transaction/interfaces/raw-responses';
 import { Wallet } from 'src/wallet/entities/wallet.entity';
+import { EditExpTransactionDto } from './dto/edit-exp-transaction.dto';
 
 const thisModule = "Transactions"
 
@@ -149,7 +150,7 @@ export class ExpenseTransactionService {
         }
     }
 
-    async editExpense(expId: number, user: User, dto: EditTransactionsDto, ip: string) {
+    async editExpense(expId: number, user: User, dto: EditExpTransactionDto, ip: string) {
         const expense = await this.expenseRepo.findOne({ where: { id: expId }, loadEagerRelations: true })
         if (!expense) throw new NotFoundException(DataErrorID.NotFound)
         //check wallet

@@ -10,6 +10,7 @@ import { ExpenseTransactionService } from './expense-transaction.service';
 import { ExpenseMonthlyFilterDto } from './dto/monthly-trans-filter.dto';
 import { TransactionsRecapDto } from 'src/transaction/dto/recap-filter.dto';
 import { AnnualTransactionDto } from 'src/transaction/dto/annual-filter.dto';
+import { EditExpTransactionDto } from './dto/edit-exp-transaction.dto';
 
 @Controller('transaction/expense')
 export class ExpenseTransactionController {
@@ -59,7 +60,7 @@ export class ExpenseTransactionController {
 
   @Patch("edit/:id")
   @UseGuards(JwtAuthGuard)
-  editExpenseTransaction(@Param("id") id: number, @Body() dto: EditTransactionsDto, @GetUser() user: User, @RealIp() ip: string) {
+  editExpenseTransaction(@Param("id") id: number, @Body() dto: EditExpTransactionDto, @GetUser() user: User, @RealIp() ip: string) {
     return this.expenseService.editExpense(id, user, dto, ip);
   }
 
