@@ -23,6 +23,7 @@ import { ICategoriesSpent } from 'src/expense-transaction/entities/categories-sp
 import { AnnualTransactionDto } from 'src/transaction/dto/annual-filter.dto';
 import { AnnualTransaction, AnnualTransactionQuery } from 'src/transaction/interfaces/raw-responses';
 import { Wallet } from 'src/wallet/entities/wallet.entity';
+import { EditIncTransactionsDto } from './dto/edit-inc-transaction.dto';
 
 const thisModule = "Transactions";
 
@@ -138,7 +139,7 @@ export class IncomeTransactionService {
         }
     }
 
-    async editIncome(incId: number, user: User, dto: EditTransactionsDto, ip: string) {
+    async editIncome(incId: number, user: User, dto: EditIncTransactionsDto, ip: string) {
         const income = await this.incomeRepo.findOne({ where: { id: incId } })
         if (!income) throw new NotFoundException(DataErrorID.NotFound);
 

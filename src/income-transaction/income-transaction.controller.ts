@@ -11,6 +11,7 @@ import { IncomeTransFilterDto } from './dto/filter.dto';
 import { IncomeMonthlyFilterDto } from './dto/monthly-trans-filter.dto';
 import { TransactionsRecapDto } from 'src/transaction/dto/recap-filter.dto';
 import { AnnualTransactionDto } from 'src/transaction/dto/annual-filter.dto';
+import { EditIncTransactionsDto } from './dto/edit-inc-transaction.dto';
 
 @Controller('transaction/income')
 export class IncomeTransactionController {
@@ -57,7 +58,7 @@ export class IncomeTransactionController {
 
   @Patch("edit/:id")
   @UseGuards(JwtAuthGuard)
-  editIncomeTransaction(@Param("id") id: number, @Body() dto: EditTransactionsDto, @GetUser() user: User, @RealIp() ip: string) {
+  editIncomeTransaction(@Param("id") id: number, @Body() dto: EditIncTransactionsDto, @GetUser() user: User, @RealIp() ip: string) {
     return this.incomeService.editIncome(id, user, dto, ip);
   }
 
