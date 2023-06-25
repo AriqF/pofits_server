@@ -259,6 +259,7 @@ export class ExpenseTransactionService {
             .andWhere("YEAR(exp.date) = :yr", { yr: dto.date.getFullYear() })
             .distinct(true)
             .groupBy("month")
+            .orderBy("month", "ASC")
             .getRawMany();
 
         let result: AnnualTransaction[] = [];
