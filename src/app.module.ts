@@ -42,8 +42,8 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
           migrationsDir: 'src/migrations'
         },
         migrationsTableName: "migrations_typeorm",
-        migrationsRun: true,
         synchronize: true,
+        migrationsRun: true,
         dropSchema: false,
         logging: false,
         autoLoadEntities: true,
